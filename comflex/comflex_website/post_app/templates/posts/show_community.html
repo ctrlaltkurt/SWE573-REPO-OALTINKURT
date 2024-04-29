@@ -1,0 +1,53 @@
+{% extends 'posts/base.html' %}
+
+
+{% block content%}
+
+
+<div class="card">
+  <div class="card-header">
+    <strong> {{ community }} Info </strong>
+  </div>
+  <div class="card-body">
+    <h5 class="card-title"> {{ community }} </h5>
+    <!--<p class="card-text">With supporting text below as a natural lead-in to additional content.-->
+	<ul>
+	<li>Public : {{ community.is_public }}</li>
+	<li>Description : {{ community.description }}</li>
+	<li>Owner : {{ community.owner_username }}</li>
+	<li>Creation Time : {{ community.creation_date|date:"d.m.Y H:i"  }}</li>
+	<!--<li>Zip Code : {{ community.zip_code }}</li>
+	<li>Phone : {{ community.phone }}</li>
+	<li>Web Address : {{ community.web }}</li>
+	<li>Email Address : {{ community.email_address}}</li>-->
+
+  </div>
+</div>
+<br/>
+<br/>
+	<h2>{{ community }} Posts </h2>
+
+	{% for posting in posts %}
+
+		<div class="card">
+		  <div class="card-header">
+		    <strong>Post : {{ posting.name }}</strong>
+		  </div>
+		  <div class="card-body">
+		    <h5 class="card-title"></h5>
+		    <!--<p class="card-text">With supporting text below as a natural lead-in to additional content.-->
+							Posted by : {{ posting.posted_by}}<br/>							
+							Post Date : {{ posting.posting_date|date:"d.m.Y H:i" }} <br/>
+							Posted Community : {{ posting.community }}<br/>
+							<br/>{{ posting.description }}<br/>
+					<br/>{{ post.description }}<br/>
+		  </div>
+		</div>
+
+			</br>
+	{%endfor%}
+
+
+
+
+{% endblock%} 

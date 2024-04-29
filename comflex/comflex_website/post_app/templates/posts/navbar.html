@@ -1,0 +1,58 @@
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'home' %}">Comflex</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        {%if user.is_authenticated %}
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Create
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'create-post' %}">New Post</a></li>
+            <li><a class="dropdown-item" href="{% url 'create-community' %}">New Community</a></li>
+          </ul>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'list-communities' %}">All Communities</a>
+        </li>
+        {%if user.is_authenticated %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Profile
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'my-posts' %}">My Posts</a></li>
+            <li><a class="dropdown-item" href="{% url 'my-communities' %}">My Communities</a></li>
+            <li><a class="dropdown-item" href="{% url 'my-profile' %}">User Info</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'logout-user' %}">Logout</a></li>
+          </ul>
+        </li>
+        {% else %}
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'login-user' %}">Login</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'register-user' %}">Register</a>
+        </li>
+
+        {% endif %}
+
+
+
+      </ul>
+      <form class="d-flex" method="POST" action="{% url 'search-communities' %}">
+        {% csrf_token %}
+        <input class="form-control me-2" type="search" placeholder="Search Communities" aria-label="Search" name="searched">
+        <button class="btn btn-outline-success" type="submit">Search</button>
+      </form>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,25 @@
+{% extends 'posts/base.html' %}
+
+
+{% block content%}
+    {%if user.is_authenticated %}
+	
+			<h1>Create a Community</h1>
+			<br/>
+
+			{% if submitted %}
+				Community was created successfully!
+			{% else %}
+				<form action="" method="POST" >
+					{% csrf_token %}
+
+					{{ form.as_p}}
+					<input type="submit" value="Submit" class= "btn btn-success">
+				</form>
+			{% endif%}
+	{% else %}
+			<h1>You must login to view this page !</h1>
+			Login <a href="{% url 'login-user' %}">here</a>
+	{% endif %}
+	
+{% endblock%}

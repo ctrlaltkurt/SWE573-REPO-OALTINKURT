@@ -1,0 +1,19 @@
+{% extends 'posts/base.html' %}
+
+
+{% block content%}
+    {%if user.is_authenticated %}
+			<center>
+			<h1>Hello </h1>
+			<br/>
+			<!--{{ user.first_name }}-->
+			User : {{ user }}<br/>
+
+			</center>
+
+	{% else %}
+		<h1>You must login to view this page !</h1>
+		Login <a href="{% url 'login-user' %}">here</a>
+	{% endif %}
+
+{% endblock%}

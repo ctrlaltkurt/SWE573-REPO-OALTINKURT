@@ -1,0 +1,25 @@
+{% extends 'posts/base.html' %}
+
+
+{% block content%}
+
+
+	<h1>Modify the Community "{{ community }}"</h1>
+	<br/>
+
+	{% if submitted %}
+		Community was modified successfully!
+	{% else %}	
+	<form action="" method="POST">
+		{% csrf_token %}
+		{{ form.as_p }}
+		<br/>
+		<input type="submit" value="Update" class = "btn btn-success">
+
+
+	</form>
+	{% endif%}		
+
+
+
+{% endblock%}

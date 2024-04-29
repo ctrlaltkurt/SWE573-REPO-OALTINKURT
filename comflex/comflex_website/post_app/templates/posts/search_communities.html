@@ -1,0 +1,24 @@
+{% extends 'posts/base.html' %}
+
+
+{% block content%}
+
+	<center>
+
+	{% if searched %}
+		<h1>You Searched For Community: "{{searched}}" </h1>	
+		<br/>
+
+		{%for community in communities %}
+			<a href="{% url 'show-community' community.id %}"> {{ community }}</a> <br/>
+		{%endfor%}
+
+	{% else %}
+		<h1>You forgot to search a community ...</h1>	
+
+	{% endif %}
+
+
+	</center>
+
+{% endblock%}

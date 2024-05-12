@@ -9,10 +9,20 @@ from .forms import CommunityForm , PostingForm
 
 
 def my_profile(request):
+    user = request.user  # Gets the current logged-in user
+    communities = user.communities.all()  # Retrieves all communities that the user is a part of
+    return render(request, 'posts/my_profile.html', {
+        'user': user,
+        'communities': communities
+    })
+
+
+'''
+def my_profile(request):
 	user_info = SiteUser.objects.all()
 	return render(request, 'posts/my_profile.html', 
 		{'user_info' : user_info})
-
+'''
 '''
 def create_post(request):
 	submitted = False
@@ -82,8 +92,9 @@ def search_communities(request):
 def show_community(request,community_id):
 	community = Community.objects.get(pk=community_id)
 	posts = Posting.objects.filter(community=community).order_by('-posting_date')
+	posts_count = posts.count()
 	return render(request, 'posts/show_community.html', 
-		{'community' : community, 'posts': posts})
+		{'community' : community, 'posts': posts, 'posts_count' : posts_count})
 
 
 def list_communities(request):

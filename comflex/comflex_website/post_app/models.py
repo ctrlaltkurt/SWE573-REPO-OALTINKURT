@@ -17,6 +17,8 @@ class Community(models.Model):
 	description = models.TextField(blank = True)
 	owner_id = models.IntegerField('Community Owner', blank = False, default = 1 )
 	owner_username = models.ForeignKey(User, blank = False, null = True, on_delete=models.SET_NULL)
+	members = models.ManyToManyField(User, related_name='communities', blank=True)
+
 
 	def __str__(self):
 		return self.name
@@ -26,6 +28,7 @@ class SiteUser(models.Model):
 	first_name = models.CharField(max_length=30)
 	last_name =models.CharField(max_length=30)
 	email = models.EmailField('User Email' , max_length=30, blank = True)
+	member_of = models.ForeignKey(Community, blank=True, null=True, on_delete=models.CASCADE)
 
 	def __str__(self): 
 		return self.first_name + ' ' + self.last_name

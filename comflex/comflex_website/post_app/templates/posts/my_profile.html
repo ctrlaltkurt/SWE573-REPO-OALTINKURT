@@ -8,8 +8,16 @@
 			<br/>
 			<!--{{ user.first_name }}-->
 			User : {{ user }}<br/>
+<br/><br/>
+				<h2>Joined Communities </h2>
+				{%for community in communities %}
+					<a href="{% url 'show-community' community.id %}"> {{ community }}</a> <br/>
+				{%endfor%}
+<br/><br/>
+				<h2>Owned Communities </h2>
 
 			</center>
+
 
 	{% else %}
 		<h1>You must login to view this page !</h1>

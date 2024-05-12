@@ -6,7 +6,7 @@
 
 <div class="card">
   <div class="card-header">
-    <strong> {{ community }} Info </strong>
+    <strong> Community Info </strong>
   </div>
   <div class="card-body">
     <h5 class="card-title"> {{ community }} </h5>
@@ -14,7 +14,18 @@
 	<ul>
 	<li>Public : {{ community.is_public }}</li>
 	<li>Description : {{ community.description }}</li>
+	<li>Posts : {{ posts_count }}</li>
 	<li>Owner : {{ community.owner_username }}</li>
+	<li>Members : {{ community.members.all.count }}
+        <ul>
+          {% for member in community.members.all %}
+            <li>{{ member.username }}</li> <!-- Displaying username of each member -->
+          {% empty %}
+            <li>No members</li>
+          {% endfor %}
+        </ul>
+	</li>
+
 	<li>Creation Time : {{ community.creation_date|date:"d.m.Y H:i"  }}</li>
 	<!--<li>Zip Code : {{ community.zip_code }}</li>
 	<li>Phone : {{ community.phone }}</li>

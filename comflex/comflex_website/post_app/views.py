@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 import calendar
 from calendar import HTMLCalendar
 from datetime import datetime
@@ -77,6 +77,22 @@ def modify_community(request,community_id):
 
 	return render(request, 'posts/modify_community.html', 
 		{'community' : community, 'form':form})
+
+def join_community(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.method == 'POST':
+        community.members.add(request.user)  # Add the user to the community
+        # Redirect to the community page with the specific community_id
+        return redirect('show-community', community_id=community_id)
+    # Optionally handle GET request or invalid request method
+    return redirect('some_error_page')
+
+def leave_community(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.method == 'POST':
+        community.members.remove(request.user)  # Remove the user from the community
+        return redirect('show-community', community_id=community_id)
+    return redirect('some_error_page')
 
 def search_communities(request):
 	if request.method == "POST":

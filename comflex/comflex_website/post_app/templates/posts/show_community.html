@@ -3,7 +3,19 @@
 
 {% block content%}
 
+    {% if request.user in community.members.all %}
+				<form action="{% url 'leave-community' community.id %}" method="post">
+				    {% csrf_token %}
+				    <button class="btn btn-danger" type="submit" class="btn btn-primary">Leave Community</button>
+				</form>
+    {% else %}
+	      <form action="{% url 'join-community' community.id %}" method="post">
+	        {% csrf_token %}
+	        <button type="submit" class="btn btn-success">Join Community</button>
+	      </form>
+    {% endif %}
 
+<br/>
 <div class="card">
   <div class="card-header">
     <strong> Community Info </strong>

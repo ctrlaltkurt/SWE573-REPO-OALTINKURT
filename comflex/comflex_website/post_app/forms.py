@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import ModelForm
-from .models import Community , Posting
+from .models import Community , Posting , PostType
 
 # Create a venue form
 class CommunityForm(ModelForm):
@@ -52,3 +52,12 @@ class PostingForm(ModelForm):
 			#'web' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Website' }),
 			#'email_address' : forms.EmailInput(attrs = {'class':'form-control', 'placeholder' :'Email Address' }),
 		}
+
+
+class PostTypeForm(ModelForm):
+    class Meta:
+        model = PostType
+        fields = ('field_name', 'field_type')
+        widgets = {
+            'field_type': forms.Select()
+        }

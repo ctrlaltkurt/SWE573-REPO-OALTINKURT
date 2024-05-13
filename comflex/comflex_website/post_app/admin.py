@@ -7,6 +7,8 @@ from django.contrib.auth.models import User
 from .models import Community
 from .models import SiteUser
 from .models import Posting
+from .models import PostType
+
 
 #admin.site.register(Community)
 admin.site.register(SiteUser)

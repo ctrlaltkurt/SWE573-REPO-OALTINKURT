@@ -17,4 +17,5 @@ urlpatterns = [
     path('my_posts',views.my_postings, name="my-posts"), 
     path('community/<int:community_id>/join/', views.join_community, name='join-community'),
     path('community/<int:community_id>/leave/', views.leave_community, name='leave-community'),
+    path('community/<int:community_id>/add_post_type/', views.add_post_type, name='add-post-type'),
 ]

@@ -3,9 +3,35 @@ import calendar
 from calendar import HTMLCalendar
 from datetime import datetime
 from django.http import HttpResponseRedirect
-from .models import Posting, Community, SiteUser
-from .forms import CommunityForm , PostingForm
+from .models import Posting, Community, SiteUser, PostType
+from .forms import CommunityForm , PostingForm, PostTypeForm
 # Create your views here.
+
+
+
+
+def add_post_type(request,community_id):
+    community = get_object_or_404(Community, id=community_id)
+    submitted = False
+    if request.user != community.owner_username:
+        return redirect('home')
+    
+    if request.method == "POST":
+        form = PostTypeForm(request.POST)
+        if form.is_valid():
+            post_type = form.save(commit= False)
+            post_type.community = community
+            post_type.save()
+            #form.save()
+            return HttpResponseRedirect('/add_post_type?submitted=True')
+
+    else:
+        form = PostTypeForm
+        if 'submitted' in request.GET:
+            submitted = True
+
+    return render(request, 'posts/add_post_type.html', {'form' : form , 'submitted' : submitted })
+
 
 
 def my_profile(request):

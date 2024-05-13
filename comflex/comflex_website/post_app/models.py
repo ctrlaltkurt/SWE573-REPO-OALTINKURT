@@ -43,3 +43,19 @@ class Posting(models.Model):
 
 	def __str__(self):
 		return self.name
+
+
+class PostType(models.Model):
+    FIELD_TYPES = (
+        ('text', 'Text'),
+        ('number', 'Number'),
+        ('date', 'Date'),
+        ('boolean', 'Boolean'),
+        # You can add more types as needed
+    )
+    community = models.ForeignKey(Community, related_name='post_types', on_delete=models.CASCADE)
+    field_name = models.CharField(max_length=100)
+    field_type = models.CharField(max_length=50, choices=FIELD_TYPES)
+
+    def __str__(self):
+        return f"{self.field_name} ({self.field_type})"

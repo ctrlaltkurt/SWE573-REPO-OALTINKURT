@@ -1,24 +1,48 @@
 {% extends 'posts/base.html' %}
 
-
-{% block content%}
-    {%if user.is_authenticated %}
-	
-			<h1>Add a Post Type</h1>
-			<br/>
-			{% if submitted %}
-				Post was created successfully!
-			{% else %}
-				<form action="" method="POST" >
-					{% csrf_token %}
-
-					{{ form.as_p}}
-					<input type="submit" value="Submit" class= "btn btn-success">
-				</form>
-			{% endif%}
-	{% else %}
-			<h1>You must login to view this page !</h1>
-			Login <a href="{% url 'login-user' %}">here</a>
-	{% endif %}
-			
-{% endblock%}
+{% block content %}
+    {% if user.is_authenticated %}
+        <h1>Add a Post Type to {{ community.name }}</h1>
+        <br/>
+        {% if submitted %}
+            <div class="alert alert-success" role="alert">
+                Post type was created successfully!
+            </div>
+        {% else %}
+            <form action="" method="POST">
+                {% csrf_token %}
+                {{ form.as_p }}
+                {{ formset.management_form }}
+                {% for form in formset %}
+                    {{ form.as_p }}
+                {% endfor %}
+                <input type="submit" value="Submit" class="btn btn-success">
+            </form>
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <strong>Form errors:</strong>
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            <li>{{ field }}: {{ errors }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if formset.errors %}
+                <div class="alert alert-danger">
+                    <strong>Formset errors:</strong>
+                    <ul>
+                        {% for form in formset %}
+                            {% if form.errors %}
+                                <li>{{ form.errors }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <h1>You must login to view this page!</h1>
+        Login <a href="{% url 'login-user' %}">here</a>
+    {% endif %}
+{% endblock %}

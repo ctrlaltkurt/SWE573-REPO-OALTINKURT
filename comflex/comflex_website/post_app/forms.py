@@ -1,63 +1,51 @@
 from django import forms
-from django.forms import ModelForm
-from .models import Community , Posting , PostType
+from django.forms import ModelForm, inlineformset_factory
+from .models import Community, Posting, PostType, PostTypeField
 
-# Create a venue form
 class CommunityForm(ModelForm):
-	class Meta:
-		model = Community
-		#fields = "__all__"
-		fields = ('name','is_public','description')
-
-		labels = {
-			'name' : '',
-			'is_public' : '',
-			'description':''
-
-
-		}
-		
-		widgets = {
-			'name' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Community Name' }),
-			'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-			'description' : forms.Textarea(attrs = {'class':'form-control', 'placeholder' :'Description' }),
-			#'address' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Address' }),
-			#'zip_code' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Zip Code' }),
-			#'phone' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Phone Number' }),
-			#'web' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Website' }),
-			#'email_address' : forms.EmailInput(attrs = {'class':'form-control', 'placeholder' :'Email Address' }),
-		}
-
+    class Meta:
+        model = Community
+        fields = ('name', 'is_public', 'description')
+        labels = {
+            'name': '',
+            'is_public': '',
+            'description': ''
+        }
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Community Name'}),
+            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Description'}),
+        }
 
 class PostingForm(ModelForm):
-	class Meta:
-		model = Posting
-		#fields = "__all__"
-		fields = ('community','name','description')
+    class Meta:
+        model = Posting
+        fields = ('community', 'name', 'description')
 
-		labels = {
-			'community' : 'Community',
-			'name' : '',
-			'description' : '',
+    def __init__(self, *args, **kwargs):
+        post_type = kwargs.pop('post_type', None)
+        super(PostingForm, self).__init__(*args, **kwargs)
 
-		}
-		
-		widgets = {
-			'name' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Post Title' }),
-			'community' : forms.Select(attrs = {'class':'form-select', 'placeholder' :'Community' }),
-			'description' : forms.Textarea(attrs = {'class':'form-control', 'placeholder' :'Description' }),
-			#'address' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Address' }),
-			#'zip_code' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Zip Code' }),
-			#'phone' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Phone Number' }),
-			#'web' : forms.TextInput(attrs = {'class':'form-control', 'placeholder' :'Website' }),
-			#'email_address' : forms.EmailInput(attrs = {'class':'form-control', 'placeholder' :'Email Address' }),
-		}
+        self.fields['name'] = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Post Title'}))
+        self.fields['description'] = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Description'}))
 
+        if post_type:
+            for field in PostTypeField.objects.filter(post_type=post_type):
+                if field.field_type == 'text':
+                    self.fields[field.field_name] = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control'}))
+                elif field.field_type == 'number':
+                    self.fields[field.field_name] = forms.IntegerField(widget=forms.NumberInput(attrs={'class': 'form-control'}))
+                elif field.field_type == 'date':
+                    self.fields[field.field_name] = forms.DateField(widget=forms.SelectDateWidget(attrs={'class': 'form-control'}))
+                elif field.field_type == 'boolean':
+                    self.fields[field.field_name] = forms.BooleanField(widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}))
 
 class PostTypeForm(ModelForm):
     class Meta:
         model = PostType
-        fields = ('field_name', 'field_type')
+        fields = ('post_type_name',)
         widgets = {
-            'field_type': forms.Select()
+            'post_type_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+PostTypeFieldFormSet = inlineformset_factory(PostType, PostTypeField, fields=('field_name', 'field_type'), extra=1, can_delete=True)

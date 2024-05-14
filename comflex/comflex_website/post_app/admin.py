@@ -1,34 +1,32 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from .models import Community, SiteUser, Posting, PostType, PostTypeField
 
-# Register your models here.
-
-from .models import Community
-from .models import SiteUser
-from .models import Posting
-from .models import PostType
-
-
-#admin.site.register(Community)
 admin.site.register(SiteUser)
-#admin.site.register(Posting)
+
+class PostTypeFieldInline(admin.TabularInline):
+    model = PostTypeField
+    extra = 1
 
 @admin.register(Community)
 class CommunityAdmin(admin.ModelAdmin):
-	list_display = ('name',
-		)
-	#list_display = ('name','address','phone')
-	ordering=('name',)
-	search_fields = ('name',)
-	#search_fields = ('name','address')
+    list_display = ('name',)
+    ordering = ('name',)
+    search_fields = ('name',)
 
 @admin.register(Posting)
 class PostingAdmin(admin.ModelAdmin):
-	fields = (('name','community'),'description','posted_by')
-	list_display = ('name','community','description','posted_by')
-	list_filter = ('community',)
+    fields = (('name', 'community'), 'description', 'posted_by')
+    list_display = ('name', 'community', 'description', 'posted_by')
+    list_filter = ('community',)
 
+@admin.register(PostType)
+class PostTypeAdmin(admin.ModelAdmin):
+    fields = ('post_type_name', 'community')
+    list_display = ('post_type_name', 'community')
+    list_filter = ('community',)
+    inlines = [PostTypeFieldInline]
 
 class UserAdmin(BaseUserAdmin):
     list_display = BaseUserAdmin.list_display + ('list_communities',)
@@ -40,6 +38,5 @@ class UserAdmin(BaseUserAdmin):
         return 'No communities'
     list_communities.short_description = 'Communities'
 
-# Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)

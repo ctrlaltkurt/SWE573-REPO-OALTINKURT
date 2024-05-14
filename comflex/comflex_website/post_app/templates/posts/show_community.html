@@ -1,88 +1,68 @@
 {% extends 'posts/base.html' %}
 
+{% block content %}
+    <div style="text-align: right; display: flex; justify-content: flex-end; align-items: center;">
+        {% if request.user in community.members.all %}
+            <form action="{% url 'leave-community' community.id %}" method="post" style="margin-right: 15px;">
+                {% csrf_token %}
+                <button class="btn btn-danger" type="submit">Leave Community</button>
+            </form>
+            <form action="{% url 'create-post' %}" style="margin-right: 15px;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Create a Post</button>
+            </form>
+            {% if request.user.id == community.owner_id %}
+                <a href="{% url 'add-post-type' community.id %}" class="btn btn-success" style="margin-right: 10px;">Add Post Type</a>
+            {% endif %}
+        {% else %}
+            <form action="{% url 'join-community' community.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Join Community</button>
+            </form>
+        {% endif %}
+    </div>
 
-{% block content%}
-		<div style="text-align: right; display: flex; justify-content: flex-end; align-items: center;">
-	    {% if request.user in community.members.all %}
-					<form action="{% url 'leave-community' community.id %}" method="post" style="margin-right: 15px;">
-					    {% csrf_token %}
-					    <button class="btn btn-danger" type="submit" class="btn btn-primary">Leave Community</button>
-					</form>
-		      <form action="{% url 'create-post' %}" style="margin-right: 15px;">
-		        {% csrf_token %}
-		        <button type="submit" class="btn btn-success">Create a Post</button>
-		      </form>
-					{% if user.id == community.owner_id %}
-						<form action="{% url 'add-post-type' community.id %}" method="post" style="margin-right: 10px;">
-						    {% csrf_token %}
-						    <button class="btn btn-success" type="submit" class="btn btn-primary">Add Post Type</button>
-						</form>
-			    {% endif %}
-	    {% else %}
-		      <form action="{% url 'join-community' community.id %}" method="post">
-		        {% csrf_token %}
-		        <button type="submit" class="btn btn-success">Join Community</button>
-		      </form>
-	    {% endif %}
-		</div>
+    <br/>
+    <div class="card">
+        <div class="card-header">
+            <strong> Community Info </strong>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">{{ community }}</h5>
+            <ul>
+                <li>Public: {{ community.is_public }}</li>
+                <li>Description: {{ community.description }}</li>
+                <li>Posts: {{ posts_count }}</li>
+                <li>Owner: {{ community.owner_username }}</li>
+                <li>Members: {{ community.members.all.count }}
+                    <ul>
+                        {% for member in community.members.all %}
+                            <li>{{ member.username }}</li>
+                        {% empty %}
+                            <li>No members</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li>Creation Time: {{ community.creation_date|date:"d.m.Y H:i" }}</li>
+            </ul>
+        </div>
+    </div>
+    <br/>
+    <br/>
+    <h2>{{ community }} Posts </h2>
 
-
-<br/>
-<div class="card">
-  <div class="card-header">
-    <strong> Community Info </strong>
-  </div>
-  <div class="card-body">
-    <h5 class="card-title"> {{ community }} </h5>
-    <!--<p class="card-text">With supporting text below as a natural lead-in to additional content.-->
-	<ul>
-	<li>Public : {{ community.is_public }}</li>
-	<li>Description : {{ community.description }}</li>
-	<li>Posts : {{ posts_count }}</li>
-	<li>Owner : {{ community.owner_username }}</li>
-	<li>Members : {{ community.members.all.count }}
-        <ul>
-          {% for member in community.members.all %}
-            <li>{{ member.username }}</li> <!-- Displaying username of each member -->
-          {% empty %}
-            <li>No members</li>
-          {% endfor %}
-        </ul>
-	</li>
-
-	<li>Creation Time : {{ community.creation_date|date:"d.m.Y H:i"  }}</li>
-	<!--<li>Zip Code : {{ community.zip_code }}</li>
-	<li>Phone : {{ community.phone }}</li>
-	<li>Web Address : {{ community.web }}</li>
-	<li>Email Address : {{ community.email_address}}</li>-->
-
-  </div>
-</div>
-<br/>
-<br/>
-	<h2>{{ community }} Posts </h2>
-
-	{% for posting in posts %}
-
-		<div class="card">
-		  <div class="card-header">
-		    <strong>Post : {{ posting.name }}</strong>
-		  </div>
-		  <div class="card-body">
-		    <h5 class="card-title"></h5>
-		    <!--<p class="card-text">With supporting text below as a natural lead-in to additional content.-->
-							Posted by : {{ posting.posted_by}}<br/>							
-							Post Date : {{ posting.posting_date|date:"d.m.Y H:i" }} <br/>
-							Posted Community : {{ posting.community }}<br/>
-							<br/>{{ posting.description }}<br/>
-					<br/>{{ post.description }}<br/>
-		  </div>
-		</div>
-
-			</br>
-	{%endfor%}
-
-
-
-
-{% endblock%} 
+    {% for posting in posts %}
+        <div class="card">
+            <div class="card-header">
+                <strong>Post: {{ posting.name }}</strong>
+            </div>
+            <div class="card-body">
+                <p>Posted by: {{ posting.posted_by }}</p>
+                <p>Post Date: {{ posting.posting_date|date:"d.m.Y H:i" }}</p>
+                <p>Posted Community: {{ posting.community }}</p>
+                <p>{{ posting.description }}</p>
+            </div>
+        </div>
+        <br/>
+    {% endfor %}
+{% endblock %}

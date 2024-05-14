@@ -4,34 +4,38 @@ from calendar import HTMLCalendar
 from datetime import datetime
 from django.http import HttpResponseRedirect
 from .models import Posting, Community, SiteUser, PostType
-from .forms import CommunityForm , PostingForm, PostTypeForm
+from .forms import CommunityForm , PostingForm, PostTypeForm, PostTypeFieldFormSet
 # Create your views here.
 
 
 
 
-def add_post_type(request,community_id):
+def add_post_type(request, community_id):
     community = get_object_or_404(Community, id=community_id)
-    submitted = False
     if request.user != community.owner_username:
-        return redirect('home')
-    
+        return redirect('show-community', community_id=community.id)
+
+    submitted = False
     if request.method == "POST":
         form = PostTypeForm(request.POST)
-        if form.is_valid():
-            post_type = form.save(commit= False)
+        formset = PostTypeFieldFormSet(request.POST)
+        if form.is_valid() and formset.is_valid():
+            post_type = form.save(commit=False)
             post_type.community = community
             post_type.save()
-            #form.save()
-            return HttpResponseRedirect('/add_post_type?submitted=True')
-
+            formset.instance = post_type
+            formset.save()
+            return HttpResponseRedirect(f'/community/{community_id}/add_post_type?submitted=True')
+        else:
+            print("Form errors:", form.errors)
+            print("Formset errors:", formset.errors)
     else:
-        form = PostTypeForm
+        form = PostTypeForm()
+        formset = PostTypeFieldFormSet()
         if 'submitted' in request.GET:
             submitted = True
 
-    return render(request, 'posts/add_post_type.html', {'form' : form , 'submitted' : submitted })
-
+    return render(request, 'posts/add_post_type.html', {'form': form, 'formset': formset, 'submitted': submitted, 'community': community})
 
 
 def my_profile(request):
@@ -65,24 +69,25 @@ def create_post(request):
 	return render(request, 'posts/create_post.html', {'form' : form , 'submitted' : submitted })
 '''
 
-def create_post(request):
-	submitted = False
-	if request.method == "POST":
-		form = PostingForm(request.POST)
-		if form.is_valid():
-			posting = form.save(commit= False)
-			posting.posted_by = request.user
-			posting.save()
-			#form.save()
-			return HttpResponseRedirect('/create_post?submitted=True')
+def create_post(request, post_type_id=None):
+    post_type = get_object_or_404(PostType, id=post_type_id) if post_type_id else None
+    submitted = False
+    
+    if request.method == "POST":
+        form = PostingForm(request.POST, post_type=post_type)
+        if form.is_valid():
+            posting = form.save(commit=False)
+            posting.posted_by = request.user
+            posting.save()
+            return HttpResponseRedirect('/create_post?submitted=True')
+    else:
+        form = PostingForm(post_type=post_type)
+        if 'submitted' in request.GET:
+            submitted = True
 
-	else:
-		form = PostingForm
-		if 'submitted' in request.GET:
-			submitted = True
+    return render(request, 'posts/create_post.html', {'form': form, 'submitted': submitted, 'post_type': post_type})
 
-	return render(request, 'posts/create_post.html', {'form' : form , 'submitted' : submitted })
-
+    
 def modify_post(request,posting_id):	
 	posting = Posting.objects.get(pk=posting_id)
 	form = PostingForm(request.POST or None, instance=posting)
@@ -130,14 +135,11 @@ def search_communities(request):
 		return render(request, 'posts/search_communities.html', 
 		{})
 
-
-def show_community(request,community_id):
-	community = Community.objects.get(pk=community_id)
-	posts = Posting.objects.filter(community=community).order_by('-posting_date')
-	posts_count = posts.count()
-	return render(request, 'posts/show_community.html', 
-		{'community' : community, 'posts': posts, 'posts_count' : posts_count})
-
+def show_community(request, community_id):
+    community = get_object_or_404(Community, pk=community_id)
+    posts = Posting.objects.filter(community=community).order_by('-posting_date')
+    posts_count = posts.count()
+    return render(request, 'posts/show_community.html', {'community': community, 'posts': posts, 'posts_count': posts_count})
 
 def list_communities(request):
 	community_list = Community.objects.all().order_by('-creation_date')

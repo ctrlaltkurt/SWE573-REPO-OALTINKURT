@@ -10,7 +10,7 @@
 			{% if submitted %}
 				Post was created successfully!
 			{% else %}
-				<form action="" method="POST" >
+				<form action="" method="POST">
 					{% csrf_token %}
 
 					{{ form.as_p}}

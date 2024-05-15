@@ -13,7 +13,8 @@
                 {% csrf_token %}
                 {{ form.as_p }}
                 <div id="formset-area">
-                    <div class="formset-form" style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <!-- Non-removable initial fields -->
+                    <div class="formset-form non-removable" style="display: flex; align-items: center; margin-bottom: 10px;">
                         <div style="flex: 1; margin-right: 10px;">
                             <label>Field name:</label>
                             <input type="text" value="post title" readonly class="form-control">
@@ -23,7 +24,7 @@
                             <input type="text" value="text" readonly class="form-control">
                         </div>
                     </div>
-                    <div class="formset-form" style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div class="formset-form non-removable" style="display: flex; align-items: center; margin-bottom: 10px;">
                         <div style="flex: 1; margin-right: 10px;">
                             <label>Field name:</label>
                             <input type="text" value="description" readonly class="form-control">
@@ -51,6 +52,9 @@
                 <button type="button" class="btn btn-secondary" id="add-formset" style="margin-top: 10px;">Add another field</button>
                 <input type="submit" value="Submit" class="btn btn-success" style="margin-top: 10px;">
             </form>
+            <div id="warning-message" class="alert alert-warning" style="display: none; margin-top: 10px;">
+                You have to add at least one field.
+            </div>
             {% if form.errors %}
                 <div class="alert alert-danger" style="margin-top: 10px;">
                     <strong>Form errors:</strong>
@@ -81,9 +85,27 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            var formsetArea = document.getElementById('formset-area');
+            var totalForms = document.getElementById('id_fields-TOTAL_FORMS');
+            var warningMessage = document.getElementById('warning-message');
+
+            function addRemoveButton(formElement) {
+                var removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'btn btn-danger btn-sm remove-formset';
+                removeButton.textContent = 'Remove';
+                removeButton.addEventListener('click', function () {
+                    if (document.querySelectorAll('.formset-form').length > 3) { // Adjust the number based on non-removable fields
+                        formElement.remove();
+                        totalForms.value = parseInt(totalForms.value) - 1;
+                    } else {
+                        warningMessage.style.display = 'block';
+                    }
+                });
+                formElement.appendChild(removeButton);
+            }
+
             document.getElementById('add-formset').addEventListener('click', function () {
-                var formsetArea = document.getElementById('formset-area');
-                var totalForms = document.getElementById('id_fields-TOTAL_FORMS');
                 var currentFormCount = parseInt(totalForms.value);
                 var newForm = document.querySelectorAll('.formset-form')[2].cloneNode(true); // Clone one of the existing forms, but not the fixed ones
 
@@ -101,22 +123,29 @@
                     }
                 });
 
+                // Remove existing remove button if it exists
+                var existingRemoveButton = newForm.querySelector('.remove-formset');
+                if (existingRemoveButton) {
+                    existingRemoveButton.remove();
+                }
+
+                // Add a new remove button to the new form
+                addRemoveButton(newForm);
+
                 // Append the new form to the formset area
                 formsetArea.appendChild(newForm);
                 totalForms.value = currentFormCount + 1;
-
-                // Add remove button event listener
-                newForm.querySelector('.remove-formset').addEventListener('click', function () {
-                    this.parentElement.remove();
-                    totalForms.value = parseInt(totalForms.value) - 1;
-                });
+                warningMessage.style.display = 'none'; // Hide the warning message if it was displayed
             });
 
             document.querySelectorAll('.remove-formset').forEach(function (button) {
                 button.addEventListener('click', function () {
-                    this.parentElement.remove();
-                    var totalForms = document.getElementById('id_fields-TOTAL_FORMS');
-                    totalForms.value = parseInt(totalForms.value) - 1;
+                    if (document.querySelectorAll('.formset-form').length > 3) { // Adjust the number based on non-removable fields
+                        this.parentElement.remove();
+                        totalForms.value = parseInt(totalForms.value) - 1;
+                    } else {
+                        warningMessage.style.display = 'block';
+                    }
                 });
             });
         });
@@ -134,6 +163,10 @@
 
         .remove-formset {
             margin-left: 10px;
+        }
+
+        .non-removable .remove-formset {
+            display: none;
         }
     </style>
 {% endblock %}

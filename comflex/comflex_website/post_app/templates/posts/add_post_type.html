@@ -12,14 +12,47 @@
             <form action="" method="POST">
                 {% csrf_token %}
                 {{ form.as_p }}
-                {{ formset.management_form }}
-                {% for form in formset %}
-                    {{ form.as_p }}
-                {% endfor %}
-                <input type="submit" value="Submit" class="btn btn-success">
+                <div id="formset-area">
+                    <div class="formset-form" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="flex: 1; margin-right: 10px;">
+                            <label>Field name:</label>
+                            <input type="text" value="post title" readonly class="form-control">
+                        </div>
+                        <div style="flex: 1; margin-right: 10px;">
+                            <label>Field type:</label>
+                            <input type="text" value="text" readonly class="form-control">
+                        </div>
+                    </div>
+                    <div class="formset-form" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="flex: 1; margin-right: 10px;">
+                            <label>Field name:</label>
+                            <input type="text" value="description" readonly class="form-control">
+                        </div>
+                        <div style="flex: 1; margin-right: 10px;">
+                            <label>Field type:</label>
+                            <input type="text" value="text" readonly class="form-control">
+                        </div>
+                    </div>
+                    {{ formset.management_form }}
+                    {% for form in formset %}
+                        <div class="formset-form" style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <div style="flex: 1; margin-right: 10px;">
+                                {{ form.field_name.errors }}
+                                {{ form.field_name.label_tag }} {{ form.field_name }}
+                            </div>
+                            <div style="flex: 1; margin-right: 10px;">
+                                {{ form.field_type.errors }}
+                                {{ form.field_type.label_tag }} {{ form.field_type }}
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm remove-formset">Remove</button>
+                        </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn btn-secondary" id="add-formset" style="margin-top: 10px;">Add another field</button>
+                <input type="submit" value="Submit" class="btn btn-success" style="margin-top: 10px;">
             </form>
             {% if form.errors %}
-                <div class="alert alert-danger">
+                <div class="alert alert-danger" style="margin-top: 10px;">
                     <strong>Form errors:</strong>
                     <ul>
                         {% for field, errors in form.errors.items %}
@@ -29,7 +62,7 @@
                 </div>
             {% endif %}
             {% if formset.errors %}
-                <div class="alert alert-danger">
+                <div class="alert alert-danger" style="margin-top: 10px;">
                     <strong>Formset errors:</strong>
                     <ul>
                         {% for form in formset %}
@@ -45,4 +78,62 @@
         <h1>You must login to view this page!</h1>
         Login <a href="{% url 'login-user' %}">here</a>
     {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('add-formset').addEventListener('click', function () {
+                var formsetArea = document.getElementById('formset-area');
+                var totalForms = document.getElementById('id_fields-TOTAL_FORMS');
+                var currentFormCount = parseInt(totalForms.value);
+                var newForm = document.querySelectorAll('.formset-form')[2].cloneNode(true); // Clone one of the existing forms, but not the fixed ones
+
+                // Clear the values in the new form
+                var formInputs = newForm.querySelectorAll('input, select, textarea');
+                formInputs.forEach(function (input) {
+                    var name = input.name.replace(/-\d+-/, `-${currentFormCount}-`);
+                    var id = input.id.replace(/_\d+_/, `_${currentFormCount}_`);
+                    input.name = name;
+                    input.id = id;
+                    if (input.type === 'checkbox' || input.type === 'radio') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                });
+
+                // Append the new form to the formset area
+                formsetArea.appendChild(newForm);
+                totalForms.value = currentFormCount + 1;
+
+                // Add remove button event listener
+                newForm.querySelector('.remove-formset').addEventListener('click', function () {
+                    this.parentElement.remove();
+                    totalForms.value = parseInt(totalForms.value) - 1;
+                });
+            });
+
+            document.querySelectorAll('.remove-formset').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    this.parentElement.remove();
+                    var totalForms = document.getElementById('id_fields-TOTAL_FORMS');
+                    totalForms.value = parseInt(totalForms.value) - 1;
+                });
+            });
+        });
+    </script>
+
+    <style>
+        .formset-form div {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .formset-form input, .formset-form select {
+            width: 100%;
+        }
+
+        .remove-formset {
+            margin-left: 10px;
+        }
+    </style>
 {% endblock %}

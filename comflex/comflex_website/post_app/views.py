@@ -3,8 +3,9 @@ import calendar
 from calendar import HTMLCalendar
 from datetime import datetime
 from django.http import HttpResponseRedirect
-from .models import Posting, Community, SiteUser, PostType
+from .models import Posting, Community, SiteUser, PostType, PostTypeField
 from .forms import CommunityForm , PostingForm, PostTypeForm, PostTypeFieldFormSet
+from django.db import transaction
 # Create your views here.
 
 
@@ -20,11 +21,20 @@ def add_post_type(request, community_id):
         form = PostTypeForm(request.POST)
         formset = PostTypeFieldFormSet(request.POST)
         if form.is_valid() and formset.is_valid():
-            post_type = form.save(commit=False)
-            post_type.community = community
-            post_type.save()
-            formset.instance = post_type
-            formset.save()
+            with transaction.atomic():
+                post_type = form.save(commit=False)
+                post_type.community = community
+                post_type.save()
+
+                # Ensure fixed fields are created
+                if not post_type.fields.filter(is_fixed=True).exists():
+                    PostTypeField.objects.create(
+                        post_type=post_type, field_name='post title', field_type='text', is_fixed=True)
+                    PostTypeField.objects.create(
+                        post_type=post_type, field_name='description', field_type='text', is_fixed=True)
+
+                formset.instance = post_type
+                formset.save()
             return HttpResponseRedirect(f'/community/{community_id}/add_post_type?submitted=True')
         else:
             print("Form errors:", form.errors)
@@ -36,7 +46,6 @@ def add_post_type(request, community_id):
             submitted = True
 
     return render(request, 'posts/add_post_type.html', {'form': form, 'formset': formset, 'submitted': submitted, 'community': community})
-
 
 def my_profile(request):
     user = request.user  # Gets the current logged-in user
@@ -87,7 +96,7 @@ def create_post(request, post_type_id=None):
 
     return render(request, 'posts/create_post.html', {'form': form, 'submitted': submitted, 'post_type': post_type})
 
-    
+
 def modify_post(request,posting_id):	
 	posting = Posting.objects.get(pk=posting_id)
 	form = PostingForm(request.POST or None, instance=posting)

@@ -1,10 +1,9 @@
+import json
+from datetime import datetime, date
 from django.db import models
-from datetime import datetime
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-
-# Create your models here.
 
 class Community(models.Model):
     name = models.CharField('Community Name', max_length=120)
@@ -27,16 +26,6 @@ class SiteUser(models.Model):
     def __str__(self):
         return self.first_name + ' ' + self.last_name
 
-class Posting(models.Model):
-    name = models.CharField('Post Name', max_length=120)
-    posting_date = models.DateTimeField(auto_now_add=True)
-    community = models.ForeignKey(Community, blank=False, null=False, on_delete=models.CASCADE)
-    description = models.TextField(blank=True)
-    posted_by = models.ForeignKey(User, blank=False, null=True, on_delete=models.SET_NULL)
-
-    def __str__(self):
-        return self.name
-
 class PostType(models.Model):
     post_type_name = models.CharField(max_length=100)
     community = models.ForeignKey(Community, related_name='post_types', on_delete=models.CASCADE)
@@ -58,6 +47,30 @@ class PostTypeField(models.Model):
 
     def __str__(self):
         return f"{self.field_name} ({self.get_field_type_display()})"
+
+class Posting(models.Model):
+    name = models.CharField('Post Name', max_length=120)
+    posting_date = models.DateTimeField(auto_now_add=True)
+    community = models.ForeignKey(Community, blank=False, null=False, on_delete=models.CASCADE)
+    description = models.TextField(blank=True)
+    posted_by = models.ForeignKey(User, blank=False, null=True, on_delete=models.SET_NULL)
+    custom_fields = models.TextField(blank=True, default='{}')  # Use TextField for custom fields
+    post_type = models.ForeignKey(PostType, related_name='postings', on_delete=models.CASCADE, null=True)  # Allow null for now to handle migration
+
+    def __str__(self):
+        return self.name
+
+    def get_custom_fields(self):
+        try:
+            return json.loads(self.custom_fields)
+        except json.JSONDecodeError:
+            return {}
+
+    def set_custom_fields(self, fields):
+        for key, value in fields.items():
+            if isinstance(value, (datetime, date)):
+                fields[key] = value.isoformat()
+        self.custom_fields = json.dumps(fields)
 
 @receiver(post_save, sender=Community)
 def create_default_post_type(sender, instance, created, **kwargs):

@@ -52,6 +52,12 @@
         <div class="card">
             <div class="card-header">
                 <strong>Post: {{ posting.name }}</strong>
+                <br/>
+                {% if posting.post_type %}
+                    <strong>Post Type: {{ posting.post_type.post_type_name }}</strong>
+                {% else %}
+                    <strong>Post Type: None</strong>
+                {% endif %}
             </div>
             <div class="card-body">
                 <p>Posted by: {{ posting.posted_by }}</p>

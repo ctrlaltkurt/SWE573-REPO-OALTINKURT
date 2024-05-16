@@ -7,12 +7,9 @@
                 {% csrf_token %}
                 <button class="btn btn-danger" type="submit">Leave Community</button>
             </form>
-            <form action="{% url 'create-post' %}" style="margin-right: 15px;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success">Create a Post</button>
-            </form>
+            <a href="{% url 'create-post-form' %}?community_id={{ community.id }}" class="btn btn-success" style="margin-right: 10px;">Create Post</a>
             {% if request.user.id == community.owner_id %}
-                <a href="{% url 'add-post-type' community.id %}" class="btn btn-success" style="margin-right: 10px;">Add Post Type</a>
+                <a href="{% url 'add-post-type' community.id %}" class="btn btn-success" style="margin-right: 10px;">Create a Post Type</a>
             {% endif %}
         {% else %}
             <form action="{% url 'join-community' community.id %}" method="post">
@@ -61,6 +58,13 @@
                 <p>Post Date: {{ posting.posting_date|date:"d.m.Y H:i" }}</p>
                 <p>Posted Community: {{ posting.community }}</p>
                 <p>{{ posting.description }}</p>
+                {% if posting.custom_fields %}
+                    <ul>
+                        {% for field_name, field_value in posting.custom_fields.items %}
+                            <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
             </div>
         </div>
         <br/>

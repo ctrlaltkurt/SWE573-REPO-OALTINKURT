@@ -18,6 +18,7 @@
                         {{ form.as_p }}
                     </div>
                     <button type="submit" class="btn btn-success">Submit</button>
+                    <a href="{% url 'create-post' %}?community_id={{ post_type.community.id }}" class="btn btn-secondary">Reselect Post Type</a>
                     <a href="{% url 'show-community' post_type.community.id %}" class="btn btn-secondary">Cancel</a>
                 </form>
             {% endif %}

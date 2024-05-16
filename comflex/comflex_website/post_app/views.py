@@ -45,7 +45,9 @@ def add_post_type(request, community_id):
         if 'submitted' in request.GET:
             submitted = True
 
-    return render(request, 'posts/add_post_type.html', {'form': form, 'formset': formset, 'submitted': submitted, 'community': community})
+    return render(request, 'posts/add_post_type.html', {
+        'form': form, 'formset': formset, 'submitted': submitted, 'community': community
+    })
 
 def my_profile(request):
     user = request.user  # Gets the current logged-in user
@@ -78,23 +80,39 @@ def create_post(request):
 	return render(request, 'posts/create_post.html', {'form' : form , 'submitted' : submitted })
 '''
 
-def create_post(request, post_type_id=None):
-    post_type = get_object_or_404(PostType, id=post_type_id) if post_type_id else None
-    submitted = False
+def create_post(request):
+    community_id = request.GET.get('community_id')
+    community = get_object_or_404(Community, id=community_id)
+    post_types = community.post_types.all()
+
+    return render(request, 'posts/select_post_type.html', {'post_types': post_types, 'community': community})
+
+def create_post_form(request):
+    post_type_id = request.GET.get('post_type_id')
+    if not post_type_id:
+        community_id = request.GET.get('community_id')
+        return redirect(f'/create_post/?community_id={community_id}')
+    
+    post_type = get_object_or_404(PostType, id=post_type_id)
+    submitted = request.GET.get('submitted', False)
     
     if request.method == "POST":
         form = PostingForm(request.POST, post_type=post_type)
         if form.is_valid():
             posting = form.save(commit=False)
             posting.posted_by = request.user
+            posting.community = post_type.community
             posting.save()
-            return HttpResponseRedirect('/create_post?submitted=True')
+            custom_fields = {field: form.cleaned_data[field] for field in form.cleaned_data if field not in ['name', 'description']}
+            posting.custom_fields = custom_fields
+            posting.save()
+            return redirect(f'/create_post_form/?post_type_id={post_type.id}&submitted=True')
+        else:
+            print("Form errors:", form.errors)
     else:
         form = PostingForm(post_type=post_type)
-        if 'submitted' in request.GET:
-            submitted = True
-
-    return render(request, 'posts/create_post.html', {'form': form, 'submitted': submitted, 'post_type': post_type})
+        
+    return render(request, 'posts/create_post_form.html', {'form': form, 'post_type': post_type, 'submitted': submitted})
 
 
 def modify_post(request,posting_id):	

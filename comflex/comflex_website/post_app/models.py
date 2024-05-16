@@ -1,6 +1,8 @@
 from django.db import models
 from datetime import datetime
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # Create your models here.
 
@@ -56,3 +58,16 @@ class PostTypeField(models.Model):
 
     def __str__(self):
         return f"{self.field_name} ({self.get_field_type_display()})"
+
+@receiver(post_save, sender=Community)
+def create_default_post_type(sender, instance, created, **kwargs):
+    if created:
+        default_post_type = PostType.objects.create(
+            post_type_name='Default Post', community=instance
+        )
+        PostTypeField.objects.create(
+            post_type=default_post_type, field_name='post title', field_type='text', is_fixed=True
+        )
+        PostTypeField.objects.create(
+            post_type=default_post_type, field_name='description', field_type='text', is_fixed=True
+        )

@@ -5,7 +5,6 @@ from .models import Community, SiteUser, Posting, PostType, PostTypeField
 
 admin.site.register(SiteUser)
 
-
 @admin.register(Community)
 class CommunityAdmin(admin.ModelAdmin):
     list_display = ('name',)
@@ -47,7 +46,7 @@ class UserAdmin(BaseUserAdmin):
 
     def list_communities(self, user):
         communities = user.communities.all()
-        if communities:
+        if (communities):
             return ', '.join([community.name for community in communities])
         return 'No communities'
     list_communities.short_description = 'Communities'

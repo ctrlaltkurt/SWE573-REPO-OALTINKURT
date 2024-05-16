@@ -154,6 +154,7 @@ def create_community(request):
             community = form.save(commit=False)
             community.owner_username = request.user
             community.save()
+            community.members.add(request.user)  # Add the creator to the community's members
             return HttpResponseRedirect('/create_community?submitted=True')
     else:
         form = CommunityForm()

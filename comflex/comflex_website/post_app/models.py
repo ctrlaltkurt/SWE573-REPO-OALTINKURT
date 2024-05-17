@@ -4,6 +4,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files.storage import default_storage
 
 class Community(models.Model):
     name = models.CharField('Community Name', max_length=120)
@@ -39,6 +41,9 @@ class PostTypeField(models.Model):
         ('number', 'Number'),
         ('date', 'Date'),
         ('boolean', 'Boolean'),
+        ('image', 'Image'),
+        ('url', 'URL'),
+        ('phone', 'Phone'),
     )
     post_type = models.ForeignKey(PostType, related_name='fields', on_delete=models.CASCADE)
     field_name = models.CharField(max_length=100)
@@ -70,7 +75,13 @@ class Posting(models.Model):
         for key, value in fields.items():
             if isinstance(value, (datetime, date)):
                 fields[key] = value.isoformat()
+            elif isinstance(value, InMemoryUploadedFile):
+                file_path = default_storage.save(f'uploads/{value.name}', value)
+                fields[key] = file_path
         self.custom_fields = json.dumps(fields)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
 
 @receiver(post_save, sender=Community)
 def create_default_post_type(sender, instance, created, **kwargs):

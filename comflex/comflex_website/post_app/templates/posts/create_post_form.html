@@ -12,7 +12,7 @@
                 </div>
                 <a href="{% url 'show-community' post_type.community.id %}" class="btn btn-primary">Go back to Community</a>
             {% else %}
-                <form action="" method="POST">
+                <form action="" method="POST" enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="form-group">
                         {{ form.as_p }}

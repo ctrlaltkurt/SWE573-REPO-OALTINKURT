@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('home', views.all_postings, name="home"),
@@ -17,4 +19,4 @@ urlpatterns = [
     path('community/<int:community_id>/join/', views.join_community, name='join-community'),
     path('community/<int:community_id>/leave/', views.leave_community, name='leave-community'),
     path('community/<int:community_id>/add_post_type/', views.add_post_type, name='add-post-type'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

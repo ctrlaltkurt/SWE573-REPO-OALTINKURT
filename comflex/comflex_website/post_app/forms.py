@@ -47,6 +47,15 @@ class PostingForm(ModelForm):
                 elif field.field_type == 'boolean':
                     self.fields[field.field_name] = forms.BooleanField(
                         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'}), required=field.is_fixed)
+                elif field.field_type == 'image':
+                    self.fields[field.field_name] = forms.ImageField(
+                        widget=forms.ClearableFileInput(attrs={'class': 'form-control'}), required=field.is_fixed)
+                elif field.field_type == 'url':
+                    self.fields[field.field_name] = forms.URLField(
+                        widget=forms.URLInput(attrs={'class': 'form-control'}), required=field.is_fixed)
+                elif field.field_type == 'phone':
+                    self.fields[field.field_name] = forms.CharField(
+                        widget=forms.TextInput(attrs={'class': 'form-control'}), required=field.is_fixed)
 
 class PostTypeForm(ModelForm):
     class Meta:

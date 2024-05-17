@@ -67,7 +67,11 @@
                 {% if posting.custom_fields %}
                     <ul>
                         {% for field_name, field_value in posting.custom_fields.items %}
-                            <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
+                            {% if field_name == 'picture' %}
+                                <li><strong>{{ field_name }}:</strong> <img src="/media/{{ field_value }}" alt="{{ field_name }}" class="img-thumbnail" /></li>
+                            {% else %}
+                                <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
+                            {% endif %}
                         {% endfor %}
                     </ul>
                 {% endif %}

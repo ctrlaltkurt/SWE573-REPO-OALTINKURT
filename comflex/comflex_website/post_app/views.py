@@ -70,7 +70,7 @@ def create_post_form(request):
     submitted = request.GET.get('submitted', False)
     
     if request.method == "POST":
-        form = PostingForm(request.POST, post_type=post_type)
+        form = PostingForm(request.POST, request.FILES, post_type=post_type)
         if form.is_valid():
             posting = form.save(commit=False)
             posting.posted_by = request.user

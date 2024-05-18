@@ -3,8 +3,7 @@
 
 {% block content %}
     {% if user.is_authenticated %}
-        <h1>User :  {{ user }}</h1>
-        <br/><br/>
+
         <h2>Liked Posts</h2>
         {% for post in liked_posts %}
             <div class="card mb-3">
@@ -49,14 +48,14 @@
                     <div>
                         <form action="{% url 'like_post' post.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Like</button>
+                            <button type="submit" class="btn btn-primary">{{ post.total_likes }} Like</button>
                         </form>
-                        <span>{{ post.total_likes }} Likes</span>
+                        <!--<span>{{ post.total_likes }} Likes</span>-->
                         <form action="{% url 'dislike_post' post.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-secondary">Dislike</button>
+                            <button type="submit" class="btn btn-secondary">{{ post.total_dislikes }} Dislike</button>
                         </form>
-                        <span>{{ post.total_dislikes }} Dislikes</span>
+                        <!--<span>{{ post.total_dislikes }} Dislikes</span>-->
                     </div>
                 </div>
             </div>

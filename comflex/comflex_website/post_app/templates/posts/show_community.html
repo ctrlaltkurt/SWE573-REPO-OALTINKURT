@@ -94,14 +94,14 @@
                     <div>
                         <form action="{% url 'like_post' most_liked_post.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Like</button>
+                            <button type="submit" class="btn btn-primary">{{ most_liked_post.total_likes }} Like</button>
                         </form>
-                        <span>{{ most_liked_post.total_likes }} Likes</span>
+                        <!--<span>{{ most_liked_post.total_likes }} Likes</span>-->
                         <form action="{% url 'dislike_post' most_liked_post.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-secondary">Dislike</button>
+                            <button type="submit" class="btn btn-secondary">{{ most_liked_post.total_dislikes }} Dislike</button>
                         </form>
-                        <span>{{ most_liked_post.total_dislikes }} Dislikes</span>
+                        <!--<span>{{ most_liked_post.total_dislikes }} Dislikes</span>-->
                     </div>
                 </div>
             </div>
@@ -162,14 +162,14 @@
                     <div>
                         <form action="{% url 'like_post' posting.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-primary">Like</button>
+                            <button type="submit" class="btn btn-primary">{{ posting.total_likes }} Like</button>
                         </form>
-                        <span>{{ posting.total_likes }} Likes</span>
+                        <!--<span>{{ posting.total_likes }} Likes</span>-->
                         <form action="{% url 'dislike_post' posting.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-secondary">Dislike</button>
+                            <button type="submit" class="btn btn-secondary">{{ posting.total_dislikes }} Dislike</button>
                         </form>
-                        <span>{{ posting.total_dislikes }} Dislikes</span>
+                        <!--<span>{{ posting.total_dislikes }} Dislikes</span>-->
                     </div>
                 </div>
             </div>

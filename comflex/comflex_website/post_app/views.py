@@ -7,6 +7,7 @@ from django.db.models import Count, Max
 from django.contrib.auth.models import User
 from .forms import TransferOwnershipForm
 from django.contrib import messages
+from django.db.models import Q
 
 def transfer_ownership(request, community_id):
     community = get_object_or_404(Community, id=community_id)
@@ -66,7 +67,7 @@ def add_post_type(request, community_id):
         'form': form, 'formset': formset, 'submitted': submitted, 'community': community
     })
 
-def my_profile(request):
+def my_liked_posts(request):
     user = request.user  # Gets the current logged-in user
     communities = user.communities.all()  # Retrieves all communities that the user is a part of
     liked_posts = Posting.objects.filter(likes=user)  # Retrieves all posts that the user liked
@@ -75,7 +76,7 @@ def my_profile(request):
     for post in liked_posts:
         post.custom_fields = post.get_custom_fields()
 
-    return render(request, 'posts/my_profile.html', {
+    return render(request, 'posts/liked_posts.html', {
         'user': user,
         'communities': communities,
         'liked_posts': liked_posts
@@ -179,6 +180,98 @@ def search_communities(request):
     else:
         return render(request, 'posts/search_communities.html', {})
 
+
+def advanced_search(request):
+    return render(request, 'posts/advanced_search.html')
+
+def advanced_search_results(request):
+    # Community search parameters
+    community_name = request.GET.get('community_name', '')
+    community_description = request.GET.get('community_description', '')
+    creation_date_start = request.GET.get('creation_date_start')
+    creation_date_end = request.GET.get('creation_date_end')
+    min_members = request.GET.get('min_members', 0)
+    max_members = request.GET.get('max_members', None)
+    min_posts = request.GET.get('min_posts', 0)
+    max_posts = request.GET.get('max_posts', None)
+    last_post_date_start = request.GET.get('last_post_date_start')
+    last_post_date_end = request.GET.get('last_post_date_end')
+
+    # Post search parameters
+    post_name = request.GET.get('post_name', '')
+    post_description = request.GET.get('post_description', '')
+    post_date_start = request.GET.get('post_date_start')
+    post_date_end = request.GET.get('post_date_end')
+    min_likes = request.GET.get('min_likes', 0)
+    max_likes = request.GET.get('max_likes', None)
+
+    # Convert numeric values to int, handling empty values
+    min_members = int(min_members) if min_members else 0
+    max_members = int(max_members) if max_members else None
+    min_posts = int(min_posts) if min_posts else 0
+    max_posts = int(max_posts) if max_posts else None
+    min_likes = int(min_likes) if min_likes else 0
+    max_likes = int(max_likes) if max_likes else None
+
+    # Flags to check which type of search is being performed
+    search_communities = bool(community_name or community_description or creation_date_start or creation_date_end or min_members or max_members or min_posts or max_posts or last_post_date_start or last_post_date_end)
+    search_posts = bool(post_name or post_description or post_date_start or post_date_end or min_likes or max_likes)
+
+    # Initial querysets
+    communities = Community.objects.all().annotate(
+        member_count=Count('members', distinct=True),
+        num_posts=Count('posting', distinct=True),
+        last_post_date=Max('posting__posting_date')
+    )
+    posts = Posting.objects.all().annotate(num_likes=Count('likes'))
+
+    # Apply community filters
+    if search_communities:
+        if community_name:
+            communities = communities.filter(name__icontains=community_name)
+        if community_description:
+            communities = communities.filter(description__icontains=community_description)
+        if creation_date_start:
+            communities = communities.filter(creation_date__gte=creation_date_start)
+        if creation_date_end:
+            communities = communities.filter(creation_date__lte=creation_date_end)
+        if min_members:
+            communities = communities.filter(member_count__gte=min_members)
+        if max_members is not None:
+            communities = communities.filter(member_count__lte=max_members)
+        if min_posts:
+            communities = communities.filter(num_posts__gte=min_posts)
+        if max_posts is not None:
+            communities = communities.filter(num_posts__lte=max_posts)
+        if last_post_date_start:
+            communities = communities.filter(last_post_date__gte=last_post_date_start)
+        if last_post_date_end:
+            communities = communities.filter(last_post_date__lte=last_post_date_end)
+    else:
+        communities = Community.objects.none()  # No communities should be returned if not searching for communities
+
+    # Apply post filters
+    if search_posts:
+        if post_name:
+            posts = posts.filter(name__icontains=post_name)
+        if post_description:
+            posts = posts.filter(description__icontains=post_description)
+        if post_date_start:
+            posts = posts.filter(posting_date__gte=post_date_start)
+        if post_date_end:
+            posts = posts.filter(posting_date__lte=post_date_end)
+        if min_likes:
+            posts = posts.filter(num_likes__gte=min_likes)
+        if max_likes is not None:
+            posts = posts.filter(num_likes__lte=max_likes)
+
+        # Fetch custom fields for posts
+        for post in posts:
+            post.custom_fields = post.get_custom_fields()
+    else:
+        posts = Posting.objects.none()  # No posts should be returned if not searching for posts
+
+    return render(request, 'posts/advanced_search_results.html', {'communities': communities, 'posts': posts, 'search_communities': search_communities, 'search_posts': search_posts})
 
 def show_community(request, community_id, template_name='posts/show_community.html'):
     community = get_object_or_404(Community, pk=community_id)

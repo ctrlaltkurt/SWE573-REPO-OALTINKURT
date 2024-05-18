@@ -1,0 +1,91 @@
+{% extends 'posts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Search Results</h1>
+
+    {% if communities %}
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Creation Date</th>
+                    <th>Members</th>
+                    <th>Posts</th>
+                    <th>Last Post Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for community in communities %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'show-community' community.id %}">{{ community.name }}</a>
+                        </td>
+                        <td>{{ community.description }}</td>
+                        <td>{{ community.creation_date|date:"d.m.Y H:i" }}</td>
+                        <td>{{ community.member_count }}</td>
+                        <td>{{ community.num_posts }}</td>
+                        <td>{{ community.last_post_date|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% elif search_communities %}
+        <p>No communities found matching your criteria.</p>
+    {% endif %}
+
+    {% if posts %}
+        {% for posting in posts %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong class="h4">{{ posting.name }}</strong>
+                        </div>
+                        <div class="text-right">
+                            <small>
+                                Posted by: {{ posting.posted_by }}<br/>
+                                Post Date: {{ posting.posting_date|date:"d.m.Y H:i" }}<br/>
+                                Posted Community: {{ posting.community }}<br/>
+                                {% if posting.post_type %}
+                                    Post Type: {{ posting.post_type.post_type_name }}
+                                {% else %}
+                                    Post Type: None
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Description:</strong>
+                            <p>{{ posting.description }}</p>
+                            <ul>
+                                {% for field_name, field_value in posting.custom_fields.items %}
+                                    {% if field_name != 'picture' %}
+                                        <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% if posting.custom_fields.picture %}
+                            <div class="col-md-6">
+                                <img src="{% get_media_prefix %}{{ posting.custom_fields.picture }}" alt="Picture" class="img-thumbnail" />
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <a href="{% url 'modify-post' posting.id %}" class="btn btn-outline-success btn-sm">Update</a>
+                </div>
+            </div>
+            <br/>
+        {% endfor %}
+    {% elif search_posts %}
+        <p>No posts found matching your criteria.</p>
+    {% endif %}
+</div>
+{% endblock %}

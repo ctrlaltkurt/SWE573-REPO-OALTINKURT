@@ -1,0 +1,110 @@
+{% extends 'posts/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>Advanced Search</h1>
+    <ul class="nav nav-tabs" id="searchTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="community-tab" data-bs-toggle="tab" data-bs-target="#community" type="button" role="tab" aria-controls="community" aria-selected="true">Community Search</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="post-tab" data-bs-toggle="tab" data-bs-target="#post" type="button" role="tab" aria-controls="post" aria-selected="false">Post Search</button>
+        </li>
+    </ul>
+    <div class="tab-content" id="searchTabContent">
+        <!-- Community Search Tab -->
+        <div class="tab-pane fade show active" id="community" role="tabpanel" aria-labelledby="community-tab">
+            <form method="get" action="{% url 'advanced-search-results' %}">
+                <div class="mb-3">
+                    <label for="community_name" class="form-label">Community Name:</label>
+                    <input type="text" class="form-control" name="community_name" id="community_name" placeholder="Enter community name">
+                </div>
+                <div class="mb-3">
+                    <label for="community_description" class="form-label">Description:</label>
+                    <input type="text" class="form-control" name="community_description" id="community_description" placeholder="Enter community description">
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="creation_date_start" class="form-label">Creation Date From:</label>
+                        <input type="date" class="form-control" name="creation_date_start" id="creation_date_start">
+                    </div>
+                    <div class="col">
+                        <label for="creation_date_end" class="form-label">To:</label>
+                        <input type="date" class="form-control" name="creation_date_end" id="creation_date_end">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="min_members" class="form-label">Minimum Members:</label>
+                        <input type="number" class="form-control" name="min_members" id="min_members" placeholder="Enter minimum members">
+                    </div>
+                    <div class="col">
+                        <label for="max_members" class="form-label">Maximum Members:</label>
+                        <input type="number" class="form-control" name="max_members" id="max_members" placeholder="Enter maximum members">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="min_posts" class="form-label">Minimum Posts:</label>
+                        <input type="number" class="form-control" name="min_posts" id="min_posts" placeholder="Enter minimum posts">
+                    </div>
+                    <div class="col">
+                        <label for="max_posts" class="form-label">Maximum Posts:</label>
+                        <input type="number" class="form-control" name="max_posts" id="max_posts" placeholder="Enter maximum posts">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="last_post_date_start" class="form-label">Last Post Date From:</label>
+                        <input type="date" class="form-control" name="last_post_date_start" id="last_post_date_start">
+                    </div>
+                    <div class="col">
+                        <label for="last_post_date_end" class="form-label">To:</label>
+                        <input type="date" class="form-control" name="last_post_date_end" id="last_post_date_end">
+                    </div>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Search Communities</button>
+                </div>
+            </form>
+        </div>
+        <!-- Post Search Tab -->
+        <div class="tab-pane fade" id="post" role="tabpanel" aria-labelledby="post-tab">
+            <form method="get" action="{% url 'advanced-search-results' %}">
+                <div class="mb-3">
+                    <label for="post_name" class="form-label">Post Name:</label>
+                    <input type="text" class="form-control" name="post_name" id="post_name" placeholder="Enter post name">
+                </div>
+                <div class="mb-3">
+                    <label for="post_description" class="form-label">Description:</label>
+                    <input type="text" class="form-control" name="post_description" id="post_description" placeholder="Enter post description">
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="post_date_start" class="form-label">Post Date From:</label>
+                        <input type="date" class="form-control" name="post_date_start" id="post_date_start">
+                    </div>
+                    <div class="col">
+                        <label for="post_date_end" class="form-label">To:</label>
+                        <input type="date" class="form-control" name="post_date_end" id="post_date_end">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col">
+                        <label for="min_likes" class="form-label">Minimum Likes:</label>
+                        <input type="number" class="form-control" name="min_likes" id="min_likes" placeholder="Enter minimum likes">
+                    </div>
+                    <div class="col">
+                        <label for="max_likes" class="form-label">Maximum Likes:</label>
+                        <input type="number" class="form-control" name="max_likes" id="max_likes" placeholder="Enter maximum likes">
+                    </div>
+                </div>
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary">Search Posts</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

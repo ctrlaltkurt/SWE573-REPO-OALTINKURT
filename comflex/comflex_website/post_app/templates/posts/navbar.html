@@ -26,11 +26,11 @@
         {%if user.is_authenticated %}
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Profile
+            {{ user }}
           </a>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{% url 'my-posts' %}">My Posts</a></li>
-            <li><a class="dropdown-item" href="{% url 'my-profile' %}">Liked Posts</a></li>
+            <li><a class="dropdown-item" href="{% url 'liked-posts' %}">Liked Posts</a></li>
             <li><a class="dropdown-item" href="{% url 'my-communities' %}">My Communities</a></li>
             <li><hr class="dropdown-divider"></li>
             <li><a class="dropdown-item" href="{% url 'logout-user' %}">Logout</a></li>
@@ -55,6 +55,7 @@
         <input class="form-control me-2" type="search" placeholder="Search Communities" aria-label="Search" name="searched">
         <button class="btn btn-outline-success" type="submit">Search</button>
       </form>
+      <a href="{% url 'advanced-search' %}" class="btn btn-outline-primary ms-2">Advanced Search</a>
     </div>
   </div>
 </nav>

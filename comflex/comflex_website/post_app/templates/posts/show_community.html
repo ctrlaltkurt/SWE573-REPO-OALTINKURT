@@ -50,63 +50,73 @@
     <br/>
     <br/>
 
-    {% if most_liked_post %}
-        <h2>Most Liked Post of {{ community }}</h2>
-        <div class="card mb-3">
-            <div class="card-header">
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <strong class="h4">{{ most_liked_post.name }}</strong>
-                    </div>
-                    <div class="text-right">
-                        <small>
-                            Posted by: {{ most_liked_post.posted_by }}<br/>
-                            Post Date: {{ most_liked_post.posting_date|date:"d.m.Y H:i" }}<br/>
-                            {% if most_liked_post.post_type %}
-                                Post Type: {{ most_liked_post.post_type.post_type_name }}
-                            {% else %}
-                                Post Type: None
-                            {% endif %}
-                        </small>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <strong>Description:</strong>
-                        <p>{{ most_liked_post.description }}</p>
-                        <ul>
-                            {% for field_name, field_value in most_liked_post.custom_fields.items %}
-                                {% if field_name != 'picture' %}
-                                    <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
-                                {% endif %}
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% if most_liked_post.custom_fields.picture %}
-                        <div class="col-md-6">
-                            <img src="{% get_media_prefix %}{{ most_liked_post.custom_fields.picture }}" alt="Picture" class="img-thumbnail" />
+    {% if not user.is_authenticated or user not in community.members.all %}
+        {% if most_liked_post %}
+            <h2>Most Liked Post of {{ community }}</h2>
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong class="h4">{{ most_liked_post.name }}</strong>
                         </div>
-                    {% endif %}
+                        <div class="text-right">
+                            <small>
+                                Posted by: {{ most_liked_post.posted_by }}<br/>
+                                Post Date: {{ most_liked_post.posting_date|date:"d.m.Y H:i" }}<br/>
+                                {% if most_liked_post.post_type %}
+                                    Post Type: {{ most_liked_post.post_type.post_type_name }}
+                                {% else %}
+                                    Post Type: None
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <form action="{% url 'like_post' most_liked_post.id %}" method="post" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-primary">Like</button>
-                    </form>
-                    <span>{{ most_liked_post.total_likes }} Likes</span>
-                    <form action="{% url 'dislike_post' most_liked_post.id %}" method="post" style="display: inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-secondary">Dislike</button>
-                    </form>
-                    <span>{{ most_liked_post.total_dislikes }} Dislikes</span>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Description:</strong>
+                            <p>{{ most_liked_post.description }}</p>
+                            <ul>
+                                {% for field_name, field_value in most_liked_post.custom_fields.items %}
+                                    {% if field_name != 'picture' %}
+                                        <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% if most_liked_post.custom_fields.picture %}
+                            <div class="col-md-6">
+                                <img src="{% get_media_prefix %}{{ most_liked_post.custom_fields.picture }}" alt="Picture" class="img-thumbnail" />
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <form action="{% url 'like_post' most_liked_post.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Like</button>
+                        </form>
+                        <span>{{ most_liked_post.total_likes }} Likes</span>
+                        <form action="{% url 'dislike_post' most_liked_post.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary">Dislike</button>
+                        </form>
+                        <span>{{ most_liked_post.total_dislikes }} Dislikes</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
     {% endif %}
 
     {% if user.is_authenticated and user in community.members.all %}
+        <div class="mb-3">
+            <label for="sort-posts" class="form-label">Sort posts by:</label>
+            <select id="sort-posts" class="form-select" onchange="location = this.value;">
+                <option value="{% url 'show-community' community.id %}?sort=date" {% if sort == 'date' %}selected{% endif %}>Date</option>
+                <option value="{% url 'show-community' community.id %}?sort=likes" {% if sort == 'likes' %}selected{% endif %}>Number of Likes</option>
+            </select>
+        </div>
+
         <h2>{{ community }} Posts </h2>
 
         {% for posting in posts %}

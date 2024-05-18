@@ -28,7 +28,6 @@ def transfer_ownership(request, community_id):
 
     return render(request, 'posts/transfer_ownership.html', {'form': form, 'community': community})
 
-
 def add_post_type(request, community_id):
     community = get_object_or_404(Community, id=community_id)
     if request.user != community.owner_username:
@@ -173,12 +172,25 @@ def search_communities(request):
     else:
         return render(request, 'posts/search_communities.html', {})
 
+
 def show_community(request, community_id, template_name='posts/show_community.html'):
     community = get_object_or_404(Community, pk=community_id)
-    posts = Posting.objects.filter(community=community).order_by('-posting_date')
+    sort = request.GET.get('sort', 'date')
+
+    # Determine sorting logic
+    if sort == 'likes':
+        posts = Posting.objects.filter(community=community).annotate(num_likes=Count('likes')).order_by('-num_likes')
+    else:
+        posts = Posting.objects.filter(community=community).order_by('-posting_date')
+
     posts_count = posts.count()
+
+    # Query for the most liked post
     most_liked_post = posts.annotate(num_likes=Count('likes')).order_by('-num_likes').first()
-    last_post_date = posts.first().posting_date if posts.exists() else None
+
+    # Query for the last post date based on the actual posting date
+    last_post = Posting.objects.filter(community=community).order_by('-posting_date').first()
+    last_post_date = last_post.posting_date if last_post else None
 
     if most_liked_post:
         most_liked_post.custom_fields = most_liked_post.get_custom_fields()  # Ensure custom fields are loaded properly
@@ -192,7 +204,11 @@ def show_community(request, community_id, template_name='posts/show_community.ht
         'posts_count': posts_count,
         'most_liked_post': most_liked_post,
         'last_post_date': last_post_date,
+        'sort': sort
     })
+
+
+
 
 def list_communities(request):
     community_list = Community.objects.all().order_by('-creation_date')
@@ -209,6 +225,7 @@ def create_community(request):
         if form.is_valid():
             community = form.save(commit=False)
             community.owner_username = request.user
+            community.owner_id = request.user.id  # Set the owner_id correctly
             community.save()
             community.members.add(request.user)  # Add the creator to the community's members
             return HttpResponseRedirect('/create_community?submitted=True')
@@ -223,9 +240,11 @@ def my_postings(request):
     posting_list = Posting.objects.all().order_by('-posting_date')
     return render(request, 'posts/my_posts.html', {'posting_list': posting_list})
 
+
 def all_postings(request):
     if request.user.is_authenticated:
-        posting_list = Posting.objects.all().order_by('-posting_date')
+        user_communities = Community.objects.filter(members=request.user)
+        posting_list = Posting.objects.filter(community__in=user_communities).order_by('-posting_date')
     else:
         posting_list = Posting.objects.annotate(num_likes=Count('likes')).filter(num_likes__gt=1).order_by('-posting_date')
 

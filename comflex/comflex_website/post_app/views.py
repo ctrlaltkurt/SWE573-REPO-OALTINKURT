@@ -6,6 +6,7 @@ from django.db import transaction
 from django.db.models import Count
 from django.contrib.auth.models import User
 from .forms import TransferOwnershipForm
+from django.contrib import messages
 
 def transfer_ownership(request, community_id):
     community = get_object_or_404(Community, id=community_id)
@@ -176,8 +177,6 @@ def show_community(request, community_id):
     community = get_object_or_404(Community, pk=community_id)
     posts = Posting.objects.filter(community=community).order_by('-posting_date')
     posts_count = posts.count()
-
-    # Annotate posts with the number of likes and order by the number of likes in descending order
     most_liked_post = posts.annotate(num_likes=Count('likes')).order_by('-num_likes').first()
 
     if most_liked_post:
@@ -223,7 +222,10 @@ def my_postings(request):
     return render(request, 'posts/my_posts.html', {'posting_list': posting_list})
 
 def all_postings(request):
-    posting_list = Posting.objects.all().order_by('-posting_date')
+    if request.user.is_authenticated:
+        posting_list = Posting.objects.all().order_by('-posting_date')
+    else:
+        posting_list = Posting.objects.annotate(num_likes=Count('likes')).filter(num_likes__gt=1).order_by('-posting_date')
 
     for post in posting_list:
         post.custom_fields = post.get_custom_fields()  # Ensure custom fields are loaded properly
@@ -231,6 +233,10 @@ def all_postings(request):
     return render(request, 'posts/home.html', {'posting_list': posting_list})
 
 def like_post(request, post_id):
+    if not request.user.is_authenticated:
+        messages.warning(request, "You have to log in to like a post!")
+        return redirect('login-user')
+
     post = get_object_or_404(Posting, id=post_id)
     if post.likes.filter(id=request.user.id).exists():
         post.likes.remove(request.user)
@@ -241,6 +247,10 @@ def like_post(request, post_id):
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 def dislike_post(request, post_id):
+    if not request.user.is_authenticated:
+        messages.warning(request, "You have to log in to dislike a post!")
+        return redirect('login-user')
+
     post = get_object_or_404(Posting, id=post_id)
     if post.dislikes.filter(id=request.user.id).exists():
         post.dislikes.remove(request.user)

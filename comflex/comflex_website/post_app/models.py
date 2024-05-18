@@ -1,3 +1,5 @@
+# post_app/models.py
+
 import json
 from datetime import datetime, date
 from django.db import models
@@ -61,6 +63,8 @@ class Posting(models.Model):
     posted_by = models.ForeignKey(User, blank=False, null=True, on_delete=models.SET_NULL)
     custom_fields = models.TextField(blank=True, default='{}')  # Use TextField for custom fields
     post_type = models.ForeignKey(PostType, related_name='postings', on_delete=models.CASCADE, null=True)  # Allow null for now to handle migration
+    likes = models.ManyToManyField(User, related_name='post_likes', blank=True)
+    dislikes = models.ManyToManyField(User, related_name='post_dislikes', blank=True)
 
     def __str__(self):
         return self.name
@@ -72,16 +76,30 @@ class Posting(models.Model):
             return {}
 
     def set_custom_fields(self, fields):
+        normalized_fields = {}
         for key, value in fields.items():
+            normalized_key = key.lower()  # Normalize field names to lowercase
             if isinstance(value, (datetime, date)):
-                fields[key] = value.isoformat()
+                normalized_fields[normalized_key] = value.isoformat()
             elif isinstance(value, InMemoryUploadedFile):
                 file_path = default_storage.save(f'uploads/{value.name}', value)
-                fields[key] = file_path
-        self.custom_fields = json.dumps(fields)
+                normalized_fields[normalized_key] = file_path
+                print(f"Saved image {normalized_key} at {file_path}")  # Debugging print statement
+            else:
+                normalized_fields[normalized_key] = value
+        self.custom_fields = json.dumps(normalized_fields)
+        print(f"Custom fields set: {self.custom_fields}")  # Debugging print statement
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+
+    @property
+    def total_likes(self):
+        return self.likes.count()
+
+    @property
+    def total_dislikes(self):
+        return self.dislikes.count()
 
 @receiver(post_save, sender=Community)
 def create_default_post_type(sender, instance, created, **kwargs):

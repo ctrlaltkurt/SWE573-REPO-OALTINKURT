@@ -19,4 +19,6 @@ urlpatterns = [
     path('community/<int:community_id>/join/', views.join_community, name='join-community'),
     path('community/<int:community_id>/leave/', views.leave_community, name='leave-community'),
     path('community/<int:community_id>/add_post_type/', views.add_post_type, name='add-post-type'),
+    path('like_post/<int:post_id>/', views.like_post, name='like_post'),
+    path('dislike_post/<int:post_id>/', views.dislike_post, name='dislike_post'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

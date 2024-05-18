@@ -1,36 +1,28 @@
 {% extends 'posts/base.html' %}
 
-
-{% block content%}
-	{%if user.is_authenticated %}
-		{% if user == posting.posted_by %}
-
-			<h1>Modify the Post "{{ posting }}"</h1>
-			<br/>
-			Logged in user : {{ user }}<br/>
-			post create :  {{ posting.posted_by}}<br/><br/>
-			{% if submitted %}
-				Community was modified successfully!
-			{% else %}	
-			<form action="" method="POST">
-				{% csrf_token %}
-				{{ form.as_p }}
-				<br/>
-				<input type="submit" value="Update" class = "btn btn-success">
-			</form>
-			{% endif%}		
-
-		{% else %}
-			<h2> Access Denied !</h2>
-			Only the author can modify the post.
-
-		{% endif %}
-
-	{% else %}
-			<h1>You must login to view this page !</h1>
-			Login <a href="{% url 'login-user' %}">here</a>
-	{% endif %}
-
-
-
-{% endblock%}
+{% block content %}
+    {% if user.is_authenticated %}
+        {% if user == posting.posted_by %}
+            <h1>Modify the Post "{{ posting.name }}"</h1>
+            <br/>
+            Logged in user: {{ user }}<br/>
+            Post created by: {{ posting.posted_by }}<br/><br/>
+            {% if submitted %}
+                The post was modified successfully!
+            {% else %}
+                <form action="" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <br/>
+                    <input type="submit" value="Update" class="btn btn-success">
+                </form>
+            {% endif %}
+        {% else %}
+            <h2>Access Denied!</h2>
+            Only the author can modify the post.
+        {% endif %}
+    {% else %}
+        <h1>You must log in to view this page!</h1>
+        Login <a href="{% url 'login-user' %}">here</a>
+    {% endif %}
+{% endblock %}

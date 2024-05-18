@@ -77,6 +77,12 @@ def create_post_form(request):
             posting.community = post_type.community
             posting.post_type = post_type  # Ensure post_type is set
             custom_fields = {field: form.cleaned_data[field] for field in form.cleaned_data if field not in ['name', 'description']}
+            print(f"Custom fields before saving: {custom_fields}")  # Debugging print statement
+            print(f"Form files: {request.FILES}")  # Debugging print statement
+            if 'picture' in request.FILES:
+                print(f"Picture field is present: {request.FILES['picture']}")  # Debugging print statement
+            else:
+                print("Picture field is not present in the uploaded files.")  # Debugging print statement
             posting.set_custom_fields(custom_fields)
             posting.save()
             return redirect(f'/create_post_form/?post_type_id={post_type.id}&submitted=True')
@@ -88,13 +94,24 @@ def create_post_form(request):
     return render(request, 'posts/create_post_form.html', {'form': form, 'post_type': post_type, 'submitted': submitted})
 
 def modify_post(request, posting_id):    
-    posting = Posting.objects.get(pk=posting_id)
-    form = PostingForm(request.POST or None, instance=posting)
-    if form.is_valid():
-        form.save()
-        return redirect('my-posts')
+    posting = get_object_or_404(Posting, pk=posting_id)
+    post_type = posting.post_type
 
-    return render(request, 'posts/modify_post.html', {'posting': posting, 'form': form})
+    if request.user != posting.posted_by:
+        return render(request, 'posts/modify_post.html', {'posting': posting, 'form': None, 'submitted': False, 'access_denied': True})
+
+    if request.method == "POST":
+        form = PostingForm(request.POST, request.FILES, instance=posting, post_type=post_type)
+        if form.is_valid():
+            updated_posting = form.save(commit=False)
+            custom_fields = {field: form.cleaned_data[field] for field in form.cleaned_data if field not in ['name', 'description']}
+            updated_posting.set_custom_fields(custom_fields)
+            updated_posting.save()
+            return redirect('my-posts')
+    else:
+        form = PostingForm(instance=posting, post_type=post_type)
+        
+    return render(request, 'posts/modify_post.html', {'posting': posting, 'form': form, 'submitted': False})
 
 def modify_community(request, community_id):    
     community = Community.objects.get(pk=community_id)
@@ -169,38 +186,28 @@ def my_postings(request):
 
 def all_postings(request):
     posting_list = Posting.objects.all().order_by('-posting_date')
+
+    for post in posting_list:
+        post.custom_fields = post.get_custom_fields()  # Ensure custom fields are loaded properly
+
     return render(request, 'posts/home.html', {'posting_list': posting_list})
 
-def home(request, year=datetime.now().year, month=datetime.now().strftime('%B')):
-    name="Onur"
-    #Convert month from name to number
-    month_number = list(calendar.month_name).index(month)
-    month_number = int(month_number) 
+def like_post(request, post_id):
+    post = get_object_or_404(Posting, id=post_id)
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+    else:
+        if post.dislikes.filter(id=request.user.id).exists():
+            post.dislikes.remove(request.user)
+        post.likes.add(request.user)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
-    # get current year
-    now = datetime.now()
-    current_year = now.year
-    current_month = now.month
-    # create a calendar
-
-    cal1 = HTMLCalendar().formatmonth(year, month_number)
-
-    # create a current date calendar
-
-    cal2 = HTMLCalendar().formatmonth(current_year, current_month)
-
-    # get current time
-
-    current_time = now.strftime('%H:%M')
-
-    return render(request, 'posts/home.html', {
-        "name": name,
-        "year": year,
-        "month": month,
-        "month_number": month_number,
-        "cal1": cal1,
-        "cal2": cal2,
-        "current_year": current_year,
-        "current_month": current_month,
-        "current_time": current_time
-    })
+def dislike_post(request, post_id):
+    post = get_object_or_404(Posting, id=post_id)
+    if post.dislikes.filter(id=request.user.id).exists():
+        post.dislikes.remove(request.user)
+    else:
+        if post.likes.filter(id=request.user.id).exists():
+            post.likes.remove(request.user)
+        post.dislikes.add(request.user)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

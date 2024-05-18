@@ -1,24 +1,30 @@
-<!-- show_community.html -->
-
 {% extends 'posts/base.html' %}
 {% load static %}
 
 {% block content %}
     <div style="text-align: right; display: flex; justify-content: flex-end; align-items: center;">
-        {% if request.user in community.members.all %}
-            <form action="{% url 'leave-community' community.id %}" method="post" style="margin-right: 15px;">
-                {% csrf_token %}
-                <button class="btn btn-danger" type="submit">Leave Community</button>
-            </form>
-            <a href="{% url 'create-post-form' %}?community_id={{ community.id }}" class="btn btn-success" style="margin-right: 10px;">Create Post</a>
-            {% if request.user.id == community.owner_id %}
-                <a href="{% url 'add-post-type' community.id %}" class="btn btn-success" style="margin-right: 10px;">Create a Post Type</a>
+        {% if user.is_authenticated %}
+            {% if user in community.members.all %}
+                {% if user.id == community.owner_id %}
+                    <a href="{% url 'transfer-ownership' community.id %}" class="btn btn-warning" style="margin-right: 15px;">Transfer Ownership and Leave</a>
+                {% else %}
+                    <form action="{% url 'leave-community' community.id %}" method="post" style="margin-right: 15px;">
+                        {% csrf_token %}
+                        <button class="btn btn-danger" type="submit">Leave Community</button>
+                    </form>
+                {% endif %}
+                <a href="{% url 'create-post-form' %}?community_id={{ community.id }}" class="btn btn-success" style="margin-right: 10px;">Create Post</a>
+                {% if user.id == community.owner_id %}
+                    <a href="{% url 'add-post-type' community.id %}" class="btn btn-success" style="margin-right: 10px;">Create a Post Type</a>
+                {% endif %}
+            {% else %}
+                <form action="{% url 'join-community' community.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Join Community</button>
+                </form>
             {% endif %}
         {% else %}
-            <form action="{% url 'join-community' community.id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-success">Join Community</button>
-            </form>
+            <a href="{% url 'login-user' %}?next={% url 'join-community' community.id %}" class="btn btn-success">Join Community</a>
         {% endif %}
     </div>
 
@@ -49,22 +55,21 @@
     </div>
     <br/>
     <br/>
-    <h2>{{ community }} Posts </h2>
 
-    {% for posting in posts %}
+    {% if most_liked_post %}
+        <h2>Most Liked Post of {{ community }}</h2>
         <div class="card mb-3">
             <div class="card-header">
                 <div class="d-flex justify-content-between">
                     <div>
-                        <strong class="h4">{{ posting.name }}</strong>
+                        <strong class="h4">{{ most_liked_post.name }}</strong>
                     </div>
                     <div class="text-right">
                         <small>
-                            Posted by: {{ posting.posted_by }}<br/>
-                            Post Date: {{ posting.posting_date|date:"d.m.Y H:i" }}<br/>
-                            Posted community: {{ posting.community }}<br/>
-                            {% if posting.post_type %}
-                                Post Type: {{ posting.post_type.post_type_name }}
+                            Posted by: {{ most_liked_post.posted_by }}<br/>
+                            Post Date: {{ most_liked_post.posting_date|date:"d.m.Y H:i" }}<br/>
+                            {% if most_liked_post.post_type %}
+                                Post Type: {{ most_liked_post.post_type.post_type_name }}
                             {% else %}
                                 Post Type: None
                             {% endif %}
@@ -76,34 +81,94 @@
                 <div class="row">
                     <div class="col-md-6">
                         <strong>Description:</strong>
-                        <p>{{ posting.description }}</p>
+                        <p>{{ most_liked_post.description }}</p>
                         <ul>
-                            {% for field_name, field_value in posting.custom_fields.items %}
+                            {% for field_name, field_value in most_liked_post.custom_fields.items %}
                                 {% if field_name != 'picture' %}
                                     <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
                                 {% endif %}
                             {% endfor %}
                         </ul>
                     </div>
-                    {% if posting.custom_fields.picture %}
+                    {% if most_liked_post.custom_fields.picture %}
                         <div class="col-md-6">
-                            <img src="{% get_media_prefix %}{{ posting.custom_fields.picture }}" alt="Picture" class="img-thumbnail" />
+                            <img src="{% get_media_prefix %}{{ most_liked_post.custom_fields.picture }}" alt="Picture" class="img-thumbnail" />
                         </div>
                     {% endif %}
                 </div>
                 <div>
-                    <form action="{% url 'like_post' posting.id %}" method="post" style="display: inline;">
+                    <form action="{% url 'like_post' most_liked_post.id %}" method="post" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary">Like</button>
                     </form>
-                    <span>{{ posting.total_likes }} Likes</span>
-                    <form action="{% url 'dislike_post' posting.id %}" method="post" style="display: inline;">
+                    <span>{{ most_liked_post.total_likes }} Likes</span>
+                    <form action="{% url 'dislike_post' most_liked_post.id %}" method="post" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-secondary">Dislike</button>
                     </form>
-                    <span>{{ posting.total_dislikes }} Dislikes</span>
+                    <span>{{ most_liked_post.total_dislikes }} Dislikes</span>
                 </div>
             </div>
         </div>
-    {% endfor %}
+    {% endif %}
+
+    {% if user.is_authenticated and user in community.members.all %}
+        <h2>{{ community }} Posts </h2>
+
+        {% for posting in posts %}
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <strong class="h4">{{ posting.name }}</strong>
+                        </div>
+                        <div class="text-right">
+                            <small>
+                                Posted by: {{ posting.posted_by }}<br/>
+                                Post Date: {{ posting.posting_date|date:"d.m.Y H:i" }}<br/>
+                                Posted community: {{ posting.community }}<br/>
+                                {% if posting.post_type %}
+                                    Post Type: {{ posting.post_type.post_type_name }}
+                                {% else %}
+                                    Post Type: None
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Description:</strong>
+                            <p>{{ posting.description }}</p>
+                            <ul>
+                                {% for field_name, field_value in posting.custom_fields.items %}
+                                    {% if field_name != 'picture' %}
+                                        <li><strong>{{ field_name }}:</strong> {{ field_value }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% if posting.custom_fields.picture %}
+                            <div class="col-md-6">
+                                <img src="{% get_media_prefix %}{{ posting.custom_fields.picture }}" alt="Picture" class="img-thumbnail" />
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <form action="{% url 'like_post' posting.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">Like</button>
+                        </form>
+                        <span>{{ posting.total_likes }} Likes</span>
+                        <form action="{% url 'dislike_post' posting.id %}" method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary">Dislike</button>
+                        </form>
+                        <span>{{ posting.total_dislikes }} Dislikes</span>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
 {% endblock %}

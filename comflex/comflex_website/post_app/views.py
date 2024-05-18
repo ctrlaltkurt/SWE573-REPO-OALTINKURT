@@ -1,11 +1,32 @@
 from django.shortcuts import render, redirect, get_object_or_404
-import calendar
-from calendar import HTMLCalendar
-from datetime import datetime
 from django.http import HttpResponseRedirect
 from .models import Posting, Community, SiteUser, PostType, PostTypeField
 from .forms import CommunityForm, PostingForm, PostTypeForm, PostTypeFieldFormSet
 from django.db import transaction
+from django.db.models import Count
+from django.contrib.auth.models import User
+from .forms import TransferOwnershipForm
+
+def transfer_ownership(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+
+    if request.user != community.owner_username:
+        return redirect('show-community', community_id=community.id)
+
+    if request.method == 'POST':
+        form = TransferOwnershipForm(request.POST, community=community)
+        if form.is_valid():
+            new_owner = form.cleaned_data['new_owner']
+            community.owner_username = new_owner
+            community.owner_id = new_owner.id  # Update owner_id as well
+            community.members.remove(request.user)
+            community.save()
+            return redirect('show-community', community_id=community.id)
+    else:
+        form = TransferOwnershipForm(community=community)
+
+    return render(request, 'posts/transfer_ownership.html', {'form': form, 'community': community})
+
 
 def add_post_type(request, community_id):
     community = get_object_or_404(Community, id=community_id)
@@ -132,7 +153,13 @@ def join_community(request, community_id):
 def leave_community(request, community_id):
     community = get_object_or_404(Community, id=community_id)
     if request.method == 'POST':
-        community.members.remove(request.user)  # Remove the user from the community
+        if request.user.id != community.owner_id:
+            community.members.remove(request.user)  # Remove the user from the community
+        else:
+            return render(request, 'posts/show_community.html', {
+                'community': community,
+                'error_message': "Community owners cannot leave their own community."
+            })
         return redirect('show-community', community_id=community_id)
     return redirect('some_error_page')
 
@@ -150,10 +177,21 @@ def show_community(request, community_id):
     posts = Posting.objects.filter(community=community).order_by('-posting_date')
     posts_count = posts.count()
 
+    # Annotate posts with the number of likes and order by the number of likes in descending order
+    most_liked_post = posts.annotate(num_likes=Count('likes')).order_by('-num_likes').first()
+
+    if most_liked_post:
+        most_liked_post.custom_fields = most_liked_post.get_custom_fields()  # Ensure custom fields are loaded properly
+
     for post in posts:
         post.custom_fields = post.get_custom_fields()  # Ensure custom fields are loaded properly
 
-    return render(request, 'posts/show_community.html', {'community': community, 'posts': posts, 'posts_count': posts_count})
+    return render(request, 'posts/show_community.html', {
+        'community': community,
+        'posts': posts,
+        'posts_count': posts_count,
+        'most_liked_post': most_liked_post,
+    })
 
 def list_communities(request):
     community_list = Community.objects.all().order_by('-creation_date')

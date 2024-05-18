@@ -1,6 +1,7 @@
 from django import forms
 from django.forms import ModelForm, inlineformset_factory
 from .models import Community, Posting, PostType, PostTypeField
+from django.contrib.auth.models import User
 
 class CommunityForm(ModelForm):
     class Meta:
@@ -66,3 +67,12 @@ class PostTypeForm(ModelForm):
         }
 
 PostTypeFieldFormSet = inlineformset_factory(PostType, PostTypeField, fields=('field_name', 'field_type'), extra=1, can_delete=True)
+
+
+class TransferOwnershipForm(forms.Form):
+    new_owner = forms.ModelChoiceField(queryset=User.objects.all(), required=True, label="Select New Owner")
+
+    def __init__(self, *args, **kwargs):
+        self.community = kwargs.pop('community')
+        super().__init__(*args, **kwargs)
+        self.fields['new_owner'].queryset = self.community.members.exclude(id=self.community.owner_id)

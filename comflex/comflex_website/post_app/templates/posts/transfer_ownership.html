@@ -1,0 +1,13 @@
+<!-- transfer_ownership.html -->
+
+{% extends 'posts/base.html' %}
+{% load static %}
+
+{% block content %}
+    <h2>Transfer Ownership of {{ community.name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-warning">Transfer Ownership and Leave</button>
+    </form>
+{% endblock %}

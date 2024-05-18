@@ -173,11 +173,12 @@ def search_communities(request):
     else:
         return render(request, 'posts/search_communities.html', {})
 
-def show_community(request, community_id):
+def show_community(request, community_id, template_name='posts/show_community.html'):
     community = get_object_or_404(Community, pk=community_id)
     posts = Posting.objects.filter(community=community).order_by('-posting_date')
     posts_count = posts.count()
     most_liked_post = posts.annotate(num_likes=Count('likes')).order_by('-num_likes').first()
+    last_post_date = posts.first().posting_date if posts.exists() else None
 
     if most_liked_post:
         most_liked_post.custom_fields = most_liked_post.get_custom_fields()  # Ensure custom fields are loaded properly
@@ -185,11 +186,12 @@ def show_community(request, community_id):
     for post in posts:
         post.custom_fields = post.get_custom_fields()  # Ensure custom fields are loaded properly
 
-    return render(request, 'posts/show_community.html', {
+    return render(request, template_name, {
         'community': community,
         'posts': posts,
         'posts_count': posts_count,
         'most_liked_post': most_liked_post,
+        'last_post_date': last_post_date,
     })
 
 def list_communities(request):

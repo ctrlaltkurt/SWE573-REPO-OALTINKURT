@@ -22,4 +22,5 @@ urlpatterns = [
     path('like_post/<int:post_id>/', views.like_post, name='like_post'),
     path('dislike_post/<int:post_id>/', views.dislike_post, name='dislike_post'),
     path('community/<int:community_id>/transfer_ownership/', views.transfer_ownership, name='transfer-ownership'),
+    path('community/<int:community_id>/members/', views.show_community, {'template_name': 'posts/community_members.html'}, name='community-members'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

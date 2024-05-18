@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect
 from .models import Posting, Community, SiteUser, PostType, PostTypeField
 from .forms import CommunityForm, PostingForm, PostTypeForm, PostTypeFieldFormSet
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, Max
 from django.contrib.auth.models import User
 from .forms import TransferOwnershipForm
 from django.contrib import messages
@@ -69,9 +69,16 @@ def add_post_type(request, community_id):
 def my_profile(request):
     user = request.user  # Gets the current logged-in user
     communities = user.communities.all()  # Retrieves all communities that the user is a part of
+    liked_posts = Posting.objects.filter(likes=user)  # Retrieves all posts that the user liked
+
+    # Ensure custom fields are correctly parsed for liked posts
+    for post in liked_posts:
+        post.custom_fields = post.get_custom_fields()
+
     return render(request, 'posts/my_profile.html', {
         'user': user,
-        'communities': communities
+        'communities': communities,
+        'liked_posts': liked_posts
     })
 
 def create_post(request):
@@ -209,6 +216,25 @@ def show_community(request, community_id, template_name='posts/show_community.ht
 
 
 
+def discover(request):
+    # Fetch new communities
+    new_communities = Community.objects.all().order_by('-creation_date')[:10]
+
+    # Fetch popular communities by number of posts
+    popular_communities = Community.objects.annotate(num_posts=Count('posting')).order_by('-num_posts')[:10]
+
+    # Fetch recently active communities by date of the last post
+    recently_active_communities = Community.objects.annotate(last_post_date=Max('posting__posting_date')).order_by('-last_post_date')[:10]
+    most_crowded_communities = Community.objects.annotate(member_count=Count('members')).order_by('-member_count')[:5]  # Adjust the number as needed
+
+    return render(request, 'posts/discover.html', {
+        'most_crowded_communities': most_crowded_communities,
+        'new_communities': new_communities,
+        'popular_communities': popular_communities,
+        'recently_active_communities': recently_active_communities,
+    })
+
+
 
 def list_communities(request):
     community_list = Community.objects.all().order_by('-creation_date')
@@ -237,7 +263,11 @@ def create_community(request):
     return render(request, 'posts/create_community.html', {'form': form, 'submitted': submitted})
 
 def my_postings(request):
-    posting_list = Posting.objects.all().order_by('-posting_date')
+    posting_list = Posting.objects.filter(posted_by=request.user).order_by('-posting_date')
+    
+    for post in posting_list:
+        post.custom_fields = post.get_custom_fields()
+    
     return render(request, 'posts/my_posts.html', {'posting_list': posting_list})
 
 

@@ -1,0 +1,65 @@
+<!-- discover.html -->
+{% extends 'posts/base.html' %}
+{% load static %}
+
+{% block content %}
+    <h1>Discover</h1>
+
+    <h2>Popular Communities</h2>
+    <table class="table table-striped table-hover table-bordered">
+        {% for community in popular_communities %}
+            <tr>
+                <td>
+                    <a href="{% url 'show-community' community.id %}">{{ community.name }}</a>
+                </td>
+                <td>
+                    {{ community.num_posts }} Posts
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h2>New Communities</h2>
+    <table class="table table-striped table-hover table-bordered">
+        {% for community in new_communities %}
+            <tr>
+                <td>
+                    <a href="{% url 'show-community' community.id %}">{{ community.name }}</a>
+                </td>
+                <td>
+                    Created on {{ community.creation_date|date:"d.m.Y H:i" }}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Recently Active Communities</h2>
+    <table class="table table-striped table-hover table-bordered">
+        {% for community in recently_active_communities %}
+            <tr>
+                <td>
+                    <a href="{% url 'show-community' community.id %}">{{ community.name }}</a>
+                </td>
+                <td>
+                    Last Post on {{ community.last_post_date|date:"d.m.Y H:i" }}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Most Crowded Communities</h2>
+    <table class="table table-striped table-hover table-bordered">
+        {% for community in most_crowded_communities %}
+            <tr>
+                <td>
+                    <a href="{% url 'show-community' community.id %}">{{ community.name }}</a>
+                </td>
+                <td>
+                    {{ community.member_count }} Members
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}
+

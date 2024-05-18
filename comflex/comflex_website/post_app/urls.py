@@ -7,6 +7,7 @@ urlpatterns = [
     path('home', views.all_postings, name="home"),
     path('create_community', views.create_community, name="create-community"),
     path('list_communities', views.list_communities, name="list-communities"),
+    path('discover', views.discover, name='discover'),
     path('my_communities', views.my_communities, name="my-communities"),
     path('show_community/<int:community_id>', views.show_community, name="show-community"),
     path('search_communities', views.search_communities, name="search-communities"),

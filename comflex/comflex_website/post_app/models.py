@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.files.storage import default_storage
 
 class Community(models.Model):
-    name = models.CharField('Community Name', max_length=120)
+    name = models.CharField('Community Name', max_length=120, unique=True)
     is_public = models.BooleanField(default=True, help_text="Check if the community is public!")
     creation_date = models.DateTimeField(auto_now_add=True)
     description = models.TextField(blank=True)

@@ -427,6 +427,7 @@ def create_community(request):
 
     return render(request, 'posts/create_community.html', {'form': form, 'submitted': submitted})
 
+
 def my_postings(request):
     posting_list = Posting.objects.filter(posted_by=request.user).order_by('-posting_date')
     

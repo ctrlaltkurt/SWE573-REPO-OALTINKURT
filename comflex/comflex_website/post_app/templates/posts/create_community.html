@@ -1,25 +1,33 @@
 {% extends 'posts/base.html' %}
 
-
-{% block content%}
-    {%if user.is_authenticated %}
-	
-			<h1>Create a Community</h1>
-			<br/>
-
-			{% if submitted %}
-				Community was created successfully!
-			{% else %}
-				<form action="" method="POST" >
-					{% csrf_token %}
-
-					{{ form.as_p}}
-					<input type="submit" value="Submit" class= "btn btn-success">
-				</form>
-			{% endif%}
-	{% else %}
-			<h1>You must login to view this page !</h1>
-			Login <a href="{% url 'login-user' %}">here</a>
-	{% endif %}
-	
-{% endblock%}
+{% block content %}
+    {% if user.is_authenticated %}
+        <h2>Create a New Community</h2>
+        {% if submitted %}
+            <div class="alert alert-success">Your community was created successfully!</div>
+        {% else %}
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <ul>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">Create</button>
+            </form>
+        {% endif %}
+    {% else %}
+        <h1>You must login to view this page!</h1>
+        Login <a href="{% url 'login-user' %}">here</a>
+    {% endif %}
+{% endblock %}

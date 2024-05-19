@@ -23,6 +23,13 @@ class CommunityForm(ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Description'}),
         }
 
+    def clean_name(self):
+        name = self.cleaned_data.get('name')
+        if Community.objects.filter(name=name).exists():
+            raise forms.ValidationError('A community with this name already exists.')
+        return name
+
+
 class PostingForm(ModelForm):
     class Meta:
         model = Posting

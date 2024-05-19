@@ -4,19 +4,17 @@
 
     <h2>Owned Communities</h2>
     <table class="table table-striped table-hover table-bordered">
-        {% for community in community_list %}
-            {% if user.id == community.owner_id %}
-                <tr>
-                    <td>
-                        <a href="{% url 'show-community' community.id %}">{{ community }}</a>
+        {% for community in owned_communities %}
+            <tr>
+                <td>
+                    <a href="{% url 'show-community' community.id %}">{{ community }}</a>
+                </td>
+                {% if user.is_authenticated %}
+                    <td align="right">
+                        <a href="{% url 'modify-community' community.id %}" class="btn btn-outline-success btn-sm">Update</a>
                     </td>
-                    {% if user.is_authenticated %}
-                        <td align="right">
-                            <a href="{% url 'modify-community' community.id %}" class="btn btn-outline-success btn-sm">Update</a>
-                        </td>
-                    {% endif %}
-                </tr>
-            {% endif %}
+                {% endif %}
+            </tr>
         {% endfor %}
     </table>
 
@@ -31,16 +29,14 @@
         {% endfor %}
     </table>
 
-    <h2>Joined Communities</h2>
+    <h2>Member Communities</h2>
     <table class="table table-striped table-hover table-bordered">
-        {% for community in community_list %}
-            {% if user.id != community.owner_id and user in community.members.all %}
-                <tr>
-                    <td>
-                        <a href="{% url 'show-community' community.id %}">{{ community }}</a>
-                    </td>
-                </tr>
-            {% endif %}
+        {% for community in joined_communities %}
+            <tr>
+                <td>
+                    <a href="{% url 'show-community' community.id %}">{{ community }}</a>
+                </td>
+            </tr>
         {% endfor %}
     </table>
 

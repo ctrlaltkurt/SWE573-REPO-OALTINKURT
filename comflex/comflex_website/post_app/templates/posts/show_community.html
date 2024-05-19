@@ -7,9 +7,16 @@
             {% if user in community.members.all %}
                 {% if user.id == community.owner_id %}
                     <a href="{% url 'transfer-ownership' community.id %}" class="btn btn-warning" style="margin-right: 15px;">Transfer Ownership and Leave</a>
+                    <a href="{% url 'add-moderator' community.id %}" class="btn btn-info" style="margin-right: 15px;">Add Moderator</a>
                 {% endif %}
                 {% if user.id == community.owner_id or user in community.moderators.all %}
                     <a href="{% url 'community-members' community.id %}" class="btn btn-info" style="margin-right: 15px;">View Members</a>
+                {% endif %}
+                {% if user.id != community.owner_id %}
+                    <form action="{% url 'leave-community' community.id %}" method="post" style="margin-right: 15px;">
+                        {% csrf_token %}
+                        <button class="btn btn-danger" type="submit">Leave Community</button>
+                    </form>
                 {% endif %}
                 <a href="{% url 'create-post-form' %}?community_id={{ community.id }}" class="btn btn-success" style="margin-right: 10px;">Create Post</a>
                 {% if user.id == community.owner_id or user in community.moderators.all %}

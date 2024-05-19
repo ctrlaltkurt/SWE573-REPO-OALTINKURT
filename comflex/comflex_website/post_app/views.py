@@ -59,6 +59,7 @@ def add_moderator(request, community_id):
 
     return render(request, 'posts/add_moderator.html', {'form': form, 'community': community})
 
+
 def remove_moderator(request, community_id, user_id):
     community = get_object_or_404(Community, id=community_id)
     if request.user != community.owner_username:
@@ -225,18 +226,18 @@ def join_community(request, community_id):
         return redirect('show-community', community_id=community_id)
     return redirect('some_error_page')
 
+
 def leave_community(request, community_id):
     community = get_object_or_404(Community, id=community_id)
     if request.method == 'POST':
         if request.user.id != community.owner_id:
             community.members.remove(request.user)  # Remove the user from the community
+            messages.success(request, "You have successfully left the community.")
         else:
-            return render(request, 'posts/show_community.html', {
-                'community': community,
-                'error_message': "Community owners cannot leave their own community."
-            })
+            messages.error(request, "Community owners cannot leave their own community.")
         return redirect('show-community', community_id=community_id)
     return redirect('some_error_page')
+
 
 def search_communities(request):
     if request.method == "POST":
@@ -384,14 +385,18 @@ def discover(request):
     popular_communities = Community.objects.annotate(num_posts=Count('posting')).order_by('-num_posts')[:10]
 
     # Fetch recently active communities by date of the last post
-    recently_active_communities = Community.objects.annotate(last_post_date=Max('posting__posting_date')).order_by('-last_post_date')[:10]
-    most_crowded_communities = Community.objects.annotate(member_count=Count('members')).order_by('-member_count')[:5]  # Adjust the number as needed
+    recently_active_communities = Community.objects.annotate(
+        last_post_date=Max('posting__posting_date')
+    ).filter(last_post_date__isnull=False).order_by('-last_post_date')[:10]
+
+    # Fetch most crowded communities by number of members
+    most_crowded_communities = Community.objects.annotate(member_count=Count('members')).order_by('-member_count')[:5]
 
     return render(request, 'posts/discover.html', {
-        'most_crowded_communities': most_crowded_communities,
         'new_communities': new_communities,
         'popular_communities': popular_communities,
         'recently_active_communities': recently_active_communities,
+        'most_crowded_communities': most_crowded_communities,
     })
 
 
@@ -401,12 +406,22 @@ def list_communities(request):
     return render(request, 'posts/list_communities.html', {'community_list': community_list})
 
 def my_communities(request):
-    community_list = Community.objects.all().order_by('-creation_date')
-    moderated_communities = Community.objects.filter(moderators=request.user)
-    
+    # Fetch all communities the user is part of
+    community_list = Community.objects.filter(members=request.user).order_by('-creation_date')
+
+    # Fetch communities owned by the user
+    owned_communities = community_list.filter(owner_id=request.user.id)
+
+    # Fetch communities the user moderates
+    moderated_communities = community_list.filter(moderators=request.user)
+
+    # Fetch communities the user joined but does not own or moderate
+    joined_communities = community_list.exclude(owner_id=request.user.id).exclude(moderators=request.user)
+
     return render(request, 'posts/my_communities.html', {
-        'community_list': community_list,
+        'owned_communities': owned_communities,
         'moderated_communities': moderated_communities,
+        'joined_communities': joined_communities,
     })
 
 def create_community(request):

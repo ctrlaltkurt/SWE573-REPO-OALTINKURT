@@ -5,7 +5,14 @@ from django.contrib.auth.models import User
 
 
 class AddModeratorForm(forms.Form):
-    new_moderator = forms.ModelChoiceField(queryset=User.objects.all(), label="Select User to Make Moderator")
+    new_moderator = forms.ModelChoiceField(queryset=User.objects.all(), label="Select a User")
+
+    def __init__(self, *args, **kwargs):
+        community = kwargs.pop('community', None)
+        super(AddModeratorForm, self).__init__(*args, **kwargs)
+        if community:
+            self.fields['new_moderator'].queryset = community.members.exclude(id__in=community.moderators.all())
+
 
 
 class CommunityForm(ModelForm):

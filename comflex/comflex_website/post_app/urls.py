@@ -26,4 +26,9 @@ urlpatterns = [
     path('dislike_post/<int:post_id>/', views.dislike_post, name='dislike_post'),
     path('community/<int:community_id>/transfer_ownership/', views.transfer_ownership, name='transfer-ownership'),
     path('community/<int:community_id>/members/', views.show_community, {'template_name': 'posts/community_members.html'}, name='community-members'),
+    path('community/<int:community_id>/add-moderator/', views.add_moderator, name='add-moderator'),
+    path('community/<int:community_id>/remove-moderator/<int:user_id>/', views.remove_moderator, name='remove-moderator'),
+    path('community/<int:community_id>/resign-moderator/', views.resign_moderator, name='resign-moderator'),
+    path('community/<int:community_id>/dismiss-user/<int:user_id>/', views.dismiss_user, name='dismiss-user'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -3,6 +3,11 @@ from django.forms import ModelForm, inlineformset_factory
 from .models import Community, Posting, PostType, PostTypeField
 from django.contrib.auth.models import User
 
+
+class AddModeratorForm(forms.Form):
+    new_moderator = forms.ModelChoiceField(queryset=User.objects.all(), label="Select User to Make Moderator")
+
+
 class CommunityForm(ModelForm):
     class Meta:
         model = Community

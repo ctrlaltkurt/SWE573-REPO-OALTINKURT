@@ -1,5 +1,3 @@
-# post_app/models.py
-
 import json
 from datetime import datetime, date
 from django.db import models
@@ -17,6 +15,7 @@ class Community(models.Model):
     owner_id = models.IntegerField('Community Owner', blank=False, default=1)
     owner_username = models.ForeignKey(User, blank=False, null=True, on_delete=models.SET_NULL)
     members = models.ManyToManyField(User, related_name='communities', blank=True)
+    moderators = models.ManyToManyField(User, related_name='moderated_communities', blank=True)  # New field for moderators
 
     def __str__(self):
         return self.name

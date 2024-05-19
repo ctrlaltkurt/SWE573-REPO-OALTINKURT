@@ -7,16 +7,19 @@
             {% if user in community.members.all %}
                 {% if user.id == community.owner_id %}
                     <a href="{% url 'transfer-ownership' community.id %}" class="btn btn-warning" style="margin-right: 15px;">Transfer Ownership and Leave</a>
+                {% endif %}
+                {% if user.id == community.owner_id or user in community.moderators.all %}
                     <a href="{% url 'community-members' community.id %}" class="btn btn-info" style="margin-right: 15px;">View Members</a>
-                {% else %}
-                    <form action="{% url 'leave-community' community.id %}" method="post" style="margin-right: 15px;">
-                        {% csrf_token %}
-                        <button class="btn btn-danger" type="submit">Leave Community</button>
-                    </form>
                 {% endif %}
                 <a href="{% url 'create-post-form' %}?community_id={{ community.id }}" class="btn btn-success" style="margin-right: 10px;">Create Post</a>
-                {% if user.id == community.owner_id %}
+                {% if user.id == community.owner_id or user in community.moderators.all %}
                     <a href="{% url 'add-post-type' community.id %}" class="btn btn-success" style="margin-right: 10px;">Create a Post Type</a>
+                {% endif %}
+                {% if user in community.moderators.all %}
+                    <form action="{% url 'resign-moderator' community.id %}" method="post" style="margin-right: 15px;">
+                        {% csrf_token %}
+                        <button class="btn btn-danger" type="submit">Resign Moderator</button>
+                    </form>
                 {% endif %}
             {% else %}
                 <form action="{% url 'join-community' community.id %}" method="post">
@@ -28,7 +31,6 @@
             <a href="{% url 'login-user' %}?next={% url 'join-community' community.id %}" class="btn btn-success">Join Community</a>
         {% endif %}
     </div>
-
     <br/>
     <div class="card">
         <div class="card-header">
@@ -41,15 +43,20 @@
                 <li>Description: {{ community.description }}</li>
                 <li>Posts: {{ posts_count }}</li>
                 <li>Owner: {{ community.owner_username }}</li>
+                <li>Moderators: 
+                    <ul>
+                        {% for moderator in community.moderators.all %}
+                            <li>{{ moderator.username }} {% if user.id == community.owner_id %} <a href="{% url 'remove-moderator' community.id moderator.id %}">Remove</a> {% endif %}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
                 <li>Members: {{ community.members.all.count }}</li>
                 <li>Creation Time: {{ community.creation_date|date:"d.m.Y H:i" }}</li>
                 <li>Last Post Date: {{ last_post_date|date:"d.m.Y H:i" }}</li>
             </ul>
         </div>
     </div>
-    <br/>
-    <br/>
-
+    <br/><br/>
     {% if not user.is_authenticated or user not in community.members.all %}
         {% if most_liked_post %}
             <h2>Most Liked Post of {{ community }}</h2>
@@ -96,18 +103,15 @@
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary">{{ most_liked_post.total_likes }} Like</button>
                         </form>
-                        <!--<span>{{ most_liked_post.total_likes }} Likes</span>-->
                         <form action="{% url 'dislike_post' most_liked_post.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-secondary">{{ most_liked_post.total_dislikes }} Dislike</button>
                         </form>
-                        <!--<span>{{ most_liked_post.total_dislikes }} Dislikes</span>-->
                     </div>
                 </div>
             </div>
         {% endif %}
     {% endif %}
-
     {% if user.is_authenticated and user in community.members.all %}
         <div class="mb-3">
             <label for="sort-posts" class="form-label">Sort posts by:</label>
@@ -116,9 +120,7 @@
                 <option value="{% url 'show-community' community.id %}?sort=likes" {% if sort == 'likes' %}selected{% endif %}>Number of Likes</option>
             </select>
         </div>
-
         <h2>{{ community }} Posts </h2>
-
         {% for posting in posts %}
             <div class="card mb-3">
                 <div class="card-header">
@@ -164,12 +166,10 @@
                             {% csrf_token %}
                             <button type="submit" class="btn btn-primary">{{ posting.total_likes }} Like</button>
                         </form>
-                        <!--<span>{{ posting.total_likes }} Likes</span>-->
                         <form action="{% url 'dislike_post' posting.id %}" method="post" style="display: inline;">
                             {% csrf_token %}
                             <button type="submit" class="btn btn-secondary">{{ posting.total_dislikes }} Dislike</button>
                         </form>
-                        <!--<span>{{ posting.total_dislikes }} Dislikes</span>-->
                     </div>
                 </div>
             </div>

@@ -8,6 +8,73 @@ from django.contrib.auth.models import User
 from .forms import TransferOwnershipForm
 from django.contrib import messages
 from django.db.models import Q
+from .forms import AddModeratorForm
+
+def dismiss_user(request, community_id, user_id):
+    community = get_object_or_404(Community, id=community_id)
+    user_to_dismiss = get_object_or_404(User, id=user_id)
+
+    # Check if the user is either the community owner or a moderator
+    if request.user != community.owner_username and request.user not in community.moderators.all():
+        messages.error(request, "You do not have permission to dismiss users from this community.")
+        return redirect('community-members', community_id=community.id)
+
+    # Only allow dismissal if the user_to_dismiss is a member of the community
+    if user_to_dismiss in community.members.all():
+        # Community owner can dismiss any user
+        if request.user == community.owner_username:
+            community.members.remove(user_to_dismiss)
+            messages.success(request, f"{user_to_dismiss.username} has been dismissed from the community.")
+        # Moderators can dismiss users except other moderators and the community owner
+        elif request.user in community.moderators.all():
+            if user_to_dismiss != community.owner_username and user_to_dismiss not in community.moderators.all():
+                community.members.remove(user_to_dismiss)
+                messages.success(request, f"{user_to_dismiss.username} has been dismissed from the community.")
+            else:
+                messages.error(request, "You cannot dismiss the community owner or other moderators.")
+    else:
+        messages.error(request, "You cannot dismiss a user who is not a member.")
+
+    return redirect('community-members', community_id=community.id)
+
+def community_members(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    return render(request, 'posts/community_members.html', {'community': community})
+
+def add_moderator(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    
+    if request.user != community.owner_username:
+        return redirect('show-community', community_id=community.id)
+
+    if request.method == "POST":
+        form = AddModeratorForm(request.POST)
+        if form.is_valid():
+            new_moderator = form.cleaned_data['new_moderator']
+            community.moderators.add(new_moderator)
+            community.save()
+            return redirect('show-community', community_id=community.id)
+    else:
+        form = AddModeratorForm()
+
+    return render(request, 'posts/add_moderator.html', {'form': form, 'community': community})
+
+def remove_moderator(request, community_id, user_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.user != community.owner_username:
+        return redirect('show-community', community_id=community.id)
+
+    moderator = get_object_or_404(User, id=user_id)
+    community.moderators.remove(moderator)
+    community.save()
+    return redirect('show-community', community_id=community.id)
+
+def resign_moderator(request, community_id):
+    community = get_object_or_404(Community, id=community_id)
+    if request.user in community.moderators.all():
+        community.moderators.remove(request.user)
+    return redirect('show-community', community_id=community_id)
+
 
 def transfer_ownership(request, community_id):
     community = get_object_or_404(Community, id=community_id)
@@ -31,7 +98,7 @@ def transfer_ownership(request, community_id):
 
 def add_post_type(request, community_id):
     community = get_object_or_404(Community, id=community_id)
-    if request.user != community.owner_username:
+    if request.user != community.owner_username and request.user not in community.moderators.all():
         return redirect('show-community', community_id=community.id)
 
     submitted = False
@@ -335,7 +402,12 @@ def list_communities(request):
 
 def my_communities(request):
     community_list = Community.objects.all().order_by('-creation_date')
-    return render(request, 'posts/my_communities.html', {'community_list': community_list})
+    moderated_communities = Community.objects.filter(moderators=request.user)
+    
+    return render(request, 'posts/my_communities.html', {
+        'community_list': community_list,
+        'moderated_communities': moderated_communities,
+    })
 
 def create_community(request):
     submitted = False
